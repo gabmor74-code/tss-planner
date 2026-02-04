@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <title>TSS Planner</title>
+  <style>
+    :root{
+      \1#0b0d10;
+      \1#12151b;
+      \1#161a22;
+      --text:#f3f3f6;
+      --muted:#b8b8c2;
+      \1#242a34;
+      --accent:#ffb800;
+      --danger:#ff5c5c;
+      --ok:#45e27a;
+      \10 10px 30px rgba(0,0,0,.40);
+      --radius: 18px;
+    }
+    html{ color-scheme: dark; }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      overflow-x:hidden;
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+      padding-top: max(18px, env(safe-area-inset-top));
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+    .wrap{
+      width: min(720px, 100%);
+      margin: 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .logo{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display:grid;
+      place-items:center;
+      flex: 0 0 auto;
+    }
+    .logo span{
+      font-weight:800;
+      letter-spacing:.5px;
+      color: var(--accent);
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+      min-width:0;
+    }
+    .title h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .title .sub{
+      margin-top:4px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .pill{
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      flex: 0 0 auto;
+      user-select:none;
+    }
+
+    /*
+      iOS Safari rende in modo diverso i layer semi-trasparenti sopra ai gradienti,
+      creando “bande”/tinte inattese. Usiamo superfici più opache per una resa uniforme.
+    */
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .inner{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 430px){
+      .grid{ grid-template-columns: 1fr; }
+      .pill{ display:none; }
+    }
+    label{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input[type="number"]{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #0b0d10;
+      color: var(--text);
+      padding: 12px 12px;
+      font-size: 16px;
+      outline: none;
+    }
+    input[type="number"]:focus{
+      border-color: rgba(255,184,0,.55);
+      box-shadow: 0 0 0 3px rgba(255,184,0,.14);
+    }
+
+
+    .signRow{
+      display:flex;
+      gap: 10px;
+      align-items:stretch;
+    }
+    .signRow input{
+      flex:1 1 auto;
+    }
+    .signBtn{
+      flex: 0 0 auto;
+      width: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card2);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      cursor:pointer;
+    }
+    .signBtn:active{
+      transform: translateY(1px);
+    }
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .seg{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+    .seg button{
+      border: 1px solid rgba(255,255,255,.10);
+      background: #141419;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .04s ease, background .2s ease, border-color .2s ease;
+    }
+    .seg button:active{ transform: scale(.98); }
+    .seg button.active{
+      background: rgba(255,184,0,.16);
+      color: var(--text);
+      border-color: rgba(255,184,0,.45);
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: #141419;
+      user-select:none;
+      width: 100%;
+      justify-content:space-between;
+    }
+    .toggle .tlabel{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width:0;
+    }
+    .toggle .tlabel .name{
+      font-size: 14px;
+      color: var(--text);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .toggle .tlabel .hint{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .switch{
+      width: 50px;
+      height: 30px;
+      border-radius: 999px;
+      background: #2a2a33;
+      border: 1px solid rgba(255,255,255,.10);
+      position:relative;
+      flex: 0 0 auto;
+    }
+    .switchWrap{
+      position: relative;
+      width: 50px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+    .switchWrap input{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      margin:0;
+      width:100%;
+      height:100%;
+      cursor:pointer;
+    }
+    .switchWrap:focus-within .switch{
+      box-shadow: 0 0 0 3px rgba(255,184,0,.14);
+    }
+    .switch::after{
+      content:"";
+      position:absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      transition: transform .18s ease, background .18s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,.35);
+    }
+    .switch.on{
+      background: rgba(69,226,122,.18);
+      border-color: rgba(69,226,122,.45);
+    }
+    .switch.on::after{
+      transform: translateX(20px);
+      background: rgba(69,226,122,.95);
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border: 1px solid rgba(255,255,255,.10);
+      background: #1b1b22;
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-size: 15px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .04s ease, background .2s ease, border-color .2s ease;
+      flex: 1 1 160px;
+      min-width: 140px;
+    }
+    .btn.primary{
+      background: rgba(255,184,0,.16);
+      border-color: rgba(255,184,0,.45);
+    }
+    .btn.ghost{
+      background: #131318;
+    }
+    .btn:active{ transform: scale(.98); }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .output{
+      white-space:pre-wrap;
+      font-size: 15px;
+      line-height: 1.35;
+      color: var(--text);
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      background: #131318;
+      min-height: 120px;
+    }
+    .outhead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 14px;
+    }
+    .outhead .h{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width:0;
+    }
+    .outhead .h .t{
+      font-weight:700;
+      font-size: 14px;
+    }
+    .outhead .h .m{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge{
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      white-space:nowrap;
+      flex: 0 0 auto;
+    }
+    .badge.ok{ border-color: rgba(69,226,122,.45); background: rgba(69,226,122,.12); color: #c9ffe0; }
+    .badge.warn{ border-color: rgba(255,184,0,.45); background: rgba(255,184,0,.12); color: #fff0c9; }
+    .badge.bad{ border-color: rgba(255,92,92,.45); background: rgba(255,92,92,.12); color: #ffd1d1; }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.75);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      backdrop-filter: blur(10px);
+      max-width: min(560px, calc(100% - 24px));
+      text-align:center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+  
+    .quick{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .qbtn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .qbtn:active{ transform: translateY(1px); }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><span>TSS</span></div>
+        <div class="title">
+          <h1>TSS Planner</h1>
+          <div class="sub">Planner only · v8.9.1</div>
+        </div>
+      </div>
+      <div class="pill" id="todayPill"></div>
+    </header>
+
+    <section class="card" aria-label="Input">
+      <div class="inner">
+        <div class="row">
+          <div class="seg" role="tablist" aria-label="Sport">
+            <button type="button" class="active" data-sport="bike_indoor">Bici indoor</button>
+            <button type="button" data-sport="bike_outdoor">Bici outdoor</button>
+            <button type="button" data-sport="run">Corsa</button>
+          </div>
+        </div>
+
+        <div class="grid" aria-label="Sessione">
+          <label>Durata (min)
+            <input inputmode="numeric" type="number" step="5" min="20" id="dur" placeholder="es. 60" />
+          </label>
+        </div>
+
+        <div class="quick" id="durQuick" aria-label="Scelte rapide durata"></div>
+
+        <div class="grid" id="ftpGrid" aria-label="Potenza" style="display:none">
+          <label>FTP (W)
+            <input inputmode="numeric" type="number" step="1" min="0" id="ftp" placeholder="es. 260" />
+          </label>
+        </div>
+
+        <div class="grid" id="hrGridBike" aria-label="Frequenza cardiaca bici" style="display:none">
+          <label>FC max bici
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrMaxBike" placeholder="es. 185" />
+          </label>
+          <label>FC riposo bici
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrRestBike" placeholder="es. 50" />
+          </label>
+        </div>
+
+        <div class="grid" id="hrGridRun" aria-label="Frequenza cardiaca corsa" style="display:none">
+          <label>FC max corsa
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrMaxRun" placeholder="es. 190" />
+          </label>
+          <label>FC riposo corsa
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrRestRun" placeholder="es. 50" />
+          </label>
+        </div>
+
+
+        <div class="grid" aria-label="Metriche">
+          <label>CTL
+            <input inputmode="decimal" type="number" step="0.1" min="0" id="ctl" placeholder="es. 55" />
+          </label>
+          <label>ATL
+            <input inputmode="decimal" type="number" step="0.1" min="0" id="atl" placeholder="es. 70" />
+          </label>
+          <label>TSB
+            <div class="signRow">
+              <input inputmode="decimal" type="number" step="0.1" id="tsb" placeholder="es. -15" />
+              <button class="signBtn" type="button" data-sign="tsb" aria-label="Cambia segno TSB">±</button>
+            </div>
+          </label>
+          <label>RAMP
+            <div class="signRow">
+              <input inputmode="decimal" type="number" step="0.1" id="ramp" placeholder="es. 4.0" />
+              <button class="signBtn" type="button" data-sign="ramp" aria-label="Cambia segno RAMP">±</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="grid" aria-label="Opzioni">
+          <div class="toggle" id="powWrap" aria-label="Misuratore di potenza">
+            <div class="tlabel">
+              <div class="name">Misuratore di potenza</div>
+              <div class="hint">Solo bici</div>
+            </div>
+            <label class="switchWrap" aria-label="Attiva misuratore di potenza">
+              <input type="checkbox" id="powChk" />
+              <span class="switch" id="powSwitch" aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="toggle" id="qualWrap" aria-label="Ieri qualità">
+            <div class="tlabel">
+              <div class="name">Ieri qualità</div>
+              <div class="hint">Sì / No</div>
+            </div>
+            <label class="switchWrap" aria-label="Imposta ieri qualità">
+              <input type="checkbox" id="qualChk" />
+              <span class="switch" id="qualSwitch" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="genBtn" type="button">Genera allenamento</button>
+          <button class="btn ghost" id="copyBtn" type="button" disabled>Copia</button>
+          <button class="btn ghost" id="resetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Output">
+      <div class="outhead">
+        <div class="h">
+          <div class="t">Allenamento di oggi</div>
+          <div class="m" id="outMeta">—</div>
+        </div>
+        <div class="badge" id="stateBadge">—</div>
+      </div>
+      <div class="output" id="outText">Inserisci i dati e genera.</div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+
+  const els = {
+    todayPill: $("todayPill"),
+    ctl: $("ctl"), atl: $("atl"), tsb: $("tsb"), ramp: $("ramp"),
+    dur: $("dur"),
+    durQuick: $("durQuick"),
+    ftpGrid: $("ftpGrid"),
+    ftp: $("ftp"),
+    hrGridBike: $("hrGridBike"),
+    hrMaxBike: $("hrMaxBike"),
+    hrRestBike: $("hrRestBike"),
+    hrGridRun: $("hrGridRun"),
+    hrMaxRun: $("hrMaxRun"),
+    hrRestRun: $("hrRestRun"),
+
+    genBtn: $("genBtn"), copyBtn: $("copyBtn"), resetBtn: $("resetBtn"),
+    outText: $("outText"), outMeta: $("outMeta"), stateBadge: $("stateBadge"),
+    powWrap: $("powWrap"), powSwitch: $("powSwitch"),
+    powChk: $("powChk"),
+    qualWrap: $("qualWrap"), qualSwitch: $("qualSwitch"),
+    qualChk: $("qualChk"),
+    toast: $("toast"),
+  };
+
+  const state = {
+    sport: "bike_indoor",
+    hasPower: false,
+    didQualityYesterday: false,
+  };
+
+  const STORAGE_KEY = "tss_planner_v8_4_state";
+
+
+// Workout library (controlled variability)
+const WORKOUT_KEY_LAST = "tss_planner_last_workout_id";
+
+function pickVariant(cat, sport, mainMin){
+  const lib = (WORKOUT_DB[cat] && WORKOUT_DB[cat][sport]) ? WORKOUT_DB[cat][sport] : [];
+  const candidates = lib.filter(v => mainMin >= v.minMain && mainMin <= v.maxMain);
+  const list = (candidates.length ? candidates : lib).slice();
+  if(!list.length) return null;
+
+  let lastId = null;
+  try{ lastId = localStorage.getItem(WORKOUT_KEY_LAST); }catch(e){}
+  // avoid repeating the same workout twice if possible
+  let filtered = list;
+  if(lastId && list.length > 1){
+    filtered = list.filter(v => v.id !== lastId);
+    if(!filtered.length) filtered = list;
+  }
+  const pick = filtered[Math.floor(Math.random()*filtered.length)];
+  try{ localStorage.setItem(WORKOUT_KEY_LAST, pick.id); }catch(e){}
+  return pick;
+}
+
+function splitInto(reps, workEach, recEach){
+  const blocks = [];
+  for(let i=1;i<=reps;i++){
+    blocks.push({mins: workEach, zone: null, tag:"work"});
+    if(i<reps) blocks.push({mins: recEach, zone: null, tag:"rec"});
+  }
+  return blocks;
+}
+
+// Each variant returns blocks relative to mainMin.
+// tags: work, rec, easy. zones are decided by the category (set in applyVariant).
+const WORKOUT_DB = {
+  endurance: {
+    bike_indoor: [
+      {id:"E-IND-STEADY", name:"Costante", minMain:18, maxMain:200, build:(m)=>[{mins:m, tag:"work"}]},
+      {id:"E-IND-3x12", name:"3×12′", minMain:42, maxMain:80, build:(m)=>{ const rec=3, work=12; const reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"E-IND-PROG", name:"Progressivo", minMain:25, maxMain:120, build:(m)=>{ const a=Math.max(10, Math.round(m*0.55)); const b=Math.max(8, m-a); return [{mins:a, tag:"easy"},{mins:b, tag:"work"}]; }},
+      {id:"E-IND-2x20", name:"2×20′", minMain:45, maxMain:95, build:(m)=>{ const rec=4, work=20, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+    ],
+    bike_outdoor: [
+      {id:"E-OUT-STEADY", name:"Costante", minMain:18, maxMain:240, build:(m)=>[{mins:m, tag:"work"}]},
+      {id:"E-OUT-2BLOCK", name:"2 blocchi lunghi", minMain:55, maxMain:160, build:(m)=>{ const rec=5; const work=Math.max(20, Math.round((m-rec)/2)); const used=work*2+rec; const rem=Math.max(0,m-used); return [{mins:work, tag:"work"},{mins:rec, tag:"rec"},{mins:work, tag:"work"}, ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"E-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.60)); const b=Math.max(10, m-a); return [{mins:a, tag:"work"},{mins:b, tag:"work2"}]; }},
+    ],
+    run: [
+      {id:"E-RUN-STEADY", name:"Corsa facile", minMain:15, maxMain:180, build:(m)=>[{mins:m, tag:"work"}]},
+      {id:"E-RUN-PROG", name:"Progressivo", minMain:25, maxMain:120, build:(m)=>{ const a=Math.max(12, Math.round(m*0.60)); const b=Math.max(8, m-a); return [{mins:a, tag:"work"},{mins:b, tag:"work2"}]; }},
+    ],
+  },
+
+  tempo: { // Medio
+    bike_indoor: [
+      {id:"M-IND-2x20", name:"2×20′", minMain:50, maxMain:120, build:(m)=>{ const rec=4, work=20, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"M-IND-3x12", name:"3×12′", minMain:45, maxMain:90, build:(m)=>{ const rec=3, work=12, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"M-IND-PROG", name:"Progressivo", minMain:28, maxMain:120, build:(m)=>{ const a=Math.max(10, Math.round(m*0.40)); const b=Math.max(10, Math.round(m*0.35)); const c=Math.max(8, m-a-b); return [{mins:a, tag:"easy"},{mins:b, tag:"work"},{mins:c, tag:"work2"}]; }},
+      {id:"M-IND-OU-LIGHT", name:"Over/Under leggero", minMain:44, maxMain:90, build:(m)=>{ const set=8; const reps=Math.max(2, Math.min(4, Math.floor(m/(set+4)))); const rec=4; const used=reps*set+(reps-1)*rec; const rem=Math.max(0,m-used); const arr=[]; for(let i=1;i<=reps;i++){ arr.push({mins:6, tag:"work"},{mins:2, tag:"work2"}); if(i<reps) arr.push({mins:rec, tag:"rec"}); } if(rem) arr.push({mins:rem, tag:"easy"}); return arr; }},
+    ],
+    bike_outdoor: [
+      {id:"M-OUT-STEADY", name:"Blocco costante", minMain:20, maxMain:240, build:(m)=>{ const work=Math.max(20, Math.round(m*0.75)); const easy=Math.max(0, m-work); return [{mins:work, tag:"work"}, ...(easy?[{mins:easy, tag:"easy"}]:[])]; }},
+      {id:"M-OUT-2x25", name:"2×25′", minMain:60, maxMain:150, build:(m)=>{ const rec=5, work=25, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"M-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.60)); const b=Math.max(10, m-a); return [{mins:a, tag:"work"},{mins:b, tag:"work2"}]; }},
+    ],
+    run: [
+      {id:"M-RUN-2x10", name:"2×10′", minMain:30, maxMain:70, build:(m)=>{ const rec=3, work=10, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"M-RUN-3x8", name:"3×8′", minMain:35, maxMain:75, build:(m)=>{ const rec=3, work=8, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"M-RUN-STEADY", name:"Blocco costante", minMain:20, maxMain:180, build:(m)=>[{mins:m, tag:"work"}]},
+    ],
+  },
+
+  threshold: { // Soglia
+    bike_indoor: [
+      {id:"S-IND-3x8", name:"3×8′", minMain:35, maxMain:75, build:(m)=>{ const rec=4, work=8, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"S-IND-2x12", name:"2×12′", minMain:32, maxMain:75, build:(m)=>{ const rec=5, work=12, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"S-IND-OU", name:"Over/Under", minMain:40, maxMain:90, build:(m)=>{ const set=10; const reps=Math.max(2, Math.min(3, Math.floor(m/(set+5)))); const rec=5; const used=reps*set+(reps-1)*rec; const rem=Math.max(0,m-used); const arr=[]; for(let i=1;i<=reps;i++){ arr.push({mins:6, tag:"work"},{mins:4, tag:"work2"}); if(i<reps) arr.push({mins:rec, tag:"rec"}); } if(rem) arr.push({mins:rem, tag:"easy"}); return arr; }},
+    ],
+    bike_outdoor: [
+      {id:"S-OUT-2x15", name:"2×15′", minMain:40, maxMain:90, build:(m)=>{ const rec=6, work=15, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"S-OUT-1x30", name:"1×30′", minMain:35, maxMain:120, build:(m)=>{ const work=Math.max(20, Math.round(m*0.70)); const easy=Math.max(0, m-work); return [{mins:work, tag:"work"}, ...(easy?[{mins:easy, tag:"easy"}]:[])]; }},
+      {id:"S-OUT-3x10", name:"3×10′", minMain:50, maxMain:110, build:(m)=>{ const rec=5, work=10, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+    ],
+    run: [
+      {id:"S-RUN-2x8", name:"2×8′", minMain:25, maxMain:60, build:(m)=>{ const rec=4, work=8, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"S-RUN-3x6", name:"3×6′", minMain:30, maxMain:65, build:(m)=>{ const rec=3, work=6, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"S-RUN-STEADY", name:"Blocco soglia", minMain:20, maxMain:120, build:(m)=>{ const work=Math.max(12, Math.round(m*0.60)); const easy=Math.max(0, m-work); return [{mins:work, tag:"work"}, ...(easy?[{mins:easy, tag:"easy"}]:[])]; }},
+    ],
+  },
+
+  vo2: { // VO2max
+    bike_indoor: [
+      {id:"V-IND-5x3", name:"5×3′", minMain:28, maxMain:70, build:(m)=>{ const rec=3, work=3, reps=5; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"V-IND-6x2", name:"6×2′", minMain:24, maxMain:60, build:(m)=>{ const rec=2, work=2, reps=6; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"V-IND-3x4", name:"3×4′", minMain:25, maxMain:70, build:(m)=>{ const rec=4, work=4, reps=3; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+    ],
+    bike_outdoor: [
+      // outdoor VO2 is rare; keep it controlled and longer recoveries
+      {id:"V-OUT-4x3", name:"4×3′", minMain:35, maxMain:90, build:(m)=>{ const rec=4, work=3, reps=4; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+    ],
+    run: [
+      {id:"V-RUN-6x1", name:"6×1′", minMain:22, maxMain:55, build:(m)=>{ const rec=2, work=1, reps=6; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+      {id:"V-RUN-5x2", name:"5×2′", minMain:24, maxMain:60, build:(m)=>{ const rec=3, work=2, reps=5; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
+    ],
+  },
+};
+
+function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, tsbUsed){
+  const v = pickVariant(cat, sport, mainMin);
+  const name = v ? v.name : "";
+  const blocks = v ? v.build(mainMin) : [{mins: mainMin, tag:"work"}];
+
+  // Zone mapping per category (conservative & controlled)
+  // endurance: mostly Z2 (or Z1 if very easy)
+  // tempo: Z3
+  // threshold: Z4 work, Z2 easy/rec
+  // vo2: Z5 work, Z1/Z2 recoveries
+  const map = {
+    endurance: {work:2, work2:3, easy:1, rec:1},
+    tempo:     {work:3, work2:3, easy:2, rec:1},
+    threshold: {work:4, work2:4, easy:2, rec:1},
+    vo2:       {work:5, work2:4, easy:2, rec:1},
+  }[cat] || {work:2, work2:2, easy:1, rec:1};
+
+  // Extra safety: if TSB very negative or yesterday quality, avoid vo2/over-under (we already constrain cat, this is just a soft downgrade)
+  if((didQualityYesterday || tsbUsed < -10) && cat==="vo2"){
+    blocks.forEach(b => { if(b.tag==="work") b.tag="work2"; });
+  }
+
+  // Render blocks (always explicit: no "2×8′" without recovery)
+  blocks.forEach(b=>{
+    const zone = map[b.tag] ?? map.work;
+    let label = "";
+    if(b.tag==="rec") label = "Rec ";
+    else if(b.tag==="easy") label = "Facile ";
+    else label = "";
+
+    bullet((label + b.mins + "′") + " — " + intStr(zone));
+  });
+
+  return {name, id: v ? v.id : null};
+}
+  function toast(msg){
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    window.clearTimeout(toast._t);
+    toast._t = window.setTimeout(()=>els.toast.classList.remove("show"), 1400);
+  }
+
+  function fmtDate(){
+    const d = new Date();
+    const opts = { weekday:"short", day:"2-digit", month:"short" };
+    return d.toLocaleDateString("it-IT", opts);
+  }
+  els.todayPill.textContent = fmtDate();
+
+  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+  function n(v){
+    if(v===null || v===undefined || v==="") return null;
+    const s = String(v).trim().replace(",", ".");
+    const x = Number(s);
+    return Number.isFinite(x) ? x : null;
+  }
+
+  function setSwitch(el, on){
+    el.classList.toggle("on", !!on);
+  }
+
+  function updateDurQuick(){
+    const s = state.sport;
+    const presets = (s==="bike_indoor") ? [45,60,75,90]
+                  : (s==="bike_outdoor") ? [90,120,150,180]
+                  : [30,40,50,60,75];
+    els.durQuick.innerHTML = "";
+    presets.forEach(v=>{
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "qbtn";
+      b.textContent = v + "′";
+      b.addEventListener("click", ()=>{
+        els.dur.value = v;
+        save();
+        toast("Durata: " + v + "′");
+      });
+      els.durQuick.appendChild(b);
+    });
+  }
+
+  function updateVisibility(){
+    const s = state.sport;
+    const isBike = (s==="bike_indoor" || s==="bike_outdoor");
+    const isRun = (s==="run");
+    // power / ftp only for bike
+    els.ftpGrid.style.display = (isBike && state.hasPower) ? "" : "none";
+    els.hrGridBike.style.display = (isBike && !state.hasPower) ? "" : "none";
+    els.hrGridRun.style.display = isRun ? "" : "none";
+  }
+
+
+  
+  function setSport(s){
+    state.sport = s;
+    document.querySelectorAll('.seg button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.sport===s);
+    });
+
+    const isBike = (s==="bike_indoor" || s==="bike_outdoor");
+    if(!isBike){
+      state.hasPower = false;
+      els.powChk.checked = false;
+      setSwitch(els.powSwitch, false);
+    }
+    els.powWrap.style.display = isBike ? "" : "none";
+
+    updateDurQuick();
+    updateVisibility();
+  if(!els.dur.value){
+    const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
+    els.dur.value = d0;
+  }
+    save();
+  }
+
+
+  function save(){
+    const payload = {
+      sport: state.sport,
+      hasPower: state.hasPower,
+      didQualityYesterday: state.didQualityYesterday,
+      dur: els.dur.value,
+      ftp: els.ftp.value,
+      hrMaxBike: els.hrMaxBike.value,
+      hrRestBike: els.hrRestBike.value,
+      hrMaxRun: els.hrMaxRun.value,
+      hrRestRun: els.hrRestRun.value,
+      ctl: els.ctl.value, atl: els.atl.value, tsb: els.tsb.value, ramp: els.ramp.value
+    };
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }catch(e){}
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const p = JSON.parse(raw);
+      if(p.sport) setSport(p.sport);
+      state.hasPower = !!p.hasPower;
+      state.didQualityYesterday = !!p.didQualityYesterday;
+      els.powChk.checked = state.hasPower;
+      els.qualChk.checked = state.didQualityYesterday;
+      setSwitch(els.powSwitch, state.hasPower);
+      setSwitch(els.qualSwitch, state.didQualityYesterday);
+      if(p.ctl!=null) els.ctl.value = p.ctl;
+      if(p.atl!=null) els.atl.value = p.atl;
+      if(p.tsb!=null) els.tsb.value = p.tsb;
+      if(p.ramp!=null) els.ramp.value = p.ramp;
+
+      if(p.dur!=null) els.dur.value = p.dur;
+      if(p.ftp!=null) els.ftp.value = p.ftp;
+      if(p.hrMaxBike!=null) els.hrMaxBike.value = p.hrMaxBike;
+      if(p.hrRestBike!=null) els.hrRestBike.value = p.hrRestBike;
+      if(p.hrMaxRun!=null) els.hrMaxRun.value = p.hrMaxRun;
+      if(p.hrRestRun!=null) els.hrRestRun.value = p.hrRestRun;
+    }catch(e){}
+  }
+
+  function calcTSB(ctl, atl, tsb){
+    if(tsb!==null) return tsb;
+    if(ctl!==null && atl!==null) return ctl - atl;
+    return null;
+  }
+
+  function tssBase(ctl, ramp){
+    const c = (ctl==null) ? 50 : clamp(ctl, 0, 140);
+    const r = (ramp==null) ? 0 : clamp(ramp, -5, 12);
+    // Daily TSS that would roughly achieve the desired weekly CTL ramp:
+    // ΔCTL/day = RAMP/7  ->  TSS = CTL + 42*(RAMP/7) = CTL + 6*RAMP
+    return Math.max(10, c + 6*r);
+  }
+
+  function tssMultiplier(tsb, didQualityYesterday){
+    let m = 1.0;
+    if(didQualityYesterday) m *= 0.75;
+    if(tsb===null) return m;
+    if(tsb <= -30) m *= 0.45;
+    else if(tsb <= -20) m *= 0.55;
+    else if(tsb <= -10) m *= 0.70;
+    else if(tsb <= 0) m *= 0.85;
+    else if(tsb <= 10) m *= 1.0;
+    else if(tsb <= 20) m *= 1.10;
+    else m *= 1.20;
+    return m;
+  }
+
+  function computeState({ctl, atl, tsb, ramp, didQualityYesterday}){
+    // Categories from TSB + ramp modifier + quality yesterday
+    let tag = "OK";
+    let badge = {text:"", cls:""};
+    let kind = "endurance"; // recovery / endurance / tempo / threshold / vo2 / long / off
+    if(didQualityYesterday){
+      if(tsb !== null && tsb <= -25) kind = "off";
+      else if(tsb !== null && tsb <= -15) kind = "recovery";
+      else kind = "endurance";
+      tag = "Recupero";
+    }else{
+      if(tsb === null){
+        kind = "endurance";
+        tag = "Neutro";
+      }else if(tsb <= -30){
+        kind = "off";
+        tag = "Molto stanco";
+      }else if(tsb <= -20){
+        kind = "recovery";
+        tag = "Stanco";
+      }else if(tsb <= -10){
+        kind = "endurance";
+        tag = "Carico";
+      }else if(tsb <= 10){
+        kind = "tempo";
+        tag = "Normale";
+      }else if(tsb <= 25){
+        kind = "threshold";
+        tag = "Fresco";
+      }else{
+        kind = "vo2";
+        tag = "Molto fresco";
+      }
+    }
+
+    // ramp rate adjustment (avoid stacking)
+    if(ramp !== null){
+      if(ramp >= 8){
+        // reduce one step
+        if(kind==="vo2") kind="threshold";
+        else if(kind==="threshold") kind="tempo";
+        else if(kind==="tempo") kind="endurance";
+        else if(kind==="endurance") kind="recovery";
+        tag += " · RAMP alto";
+      }else if(ramp <= 1.5){
+        // allow a bit more if already not high
+        if(kind==="endurance" && (tsb!==null && tsb>0) && !didQualityYesterday) kind="tempo";
+      }
+    }
+
+    if(kind==="off"){
+      badge = {text:"Riposo", cls:"bad"};
+    }else if(kind==="recovery"){
+      badge = {text:"Recupero", cls:"bad"};
+    }else if(kind==="endurance"){
+      badge = {text:"Fondo", cls:"ok"};
+    }else if(kind==="tempo"){
+      badge = {text:"Medio", cls:"warn"};
+    }else if(kind==="threshold"){
+      badge = {text:"Soglia", cls:"warn"};
+    }else if(kind==="vo2"){
+      badge = {text:"VO2max", cls:"warn"};
+    }
+
+    return {kind, tag, badge};
+  }
+
+  function durationMinutes(sport, ctl, durOverride){
+    const o = n(durOverride);
+    if(o!==null && o>0) return Math.round(clamp(o, 20, 360));
+    const c = (ctl==null) ? 50 : clamp(ctl, 0, 120);
+    if(sport==="bike_indoor") return Math.round(clamp(40 + c*0.45, 45, 90));
+    if(sport==="bike_outdoor") return Math.round(clamp(60 + c*0.85, 75, 210));
+    return Math.round(clamp(25 + c*0.38, 30, 85)); // run
+  }
+
+  
+  function buildWorkout(opts){
+    const {
+      sport, hasPower, didQualityYesterday,
+      ctl, atl, tsb, ramp,
+      durationMin,
+      ftp,
+      hrMax, hrRest
+    } = opts;
+
+    const tsbUsed = calcTSB(ctl, atl, tsb);
+    const st = computeState({ctl, atl, tsb: tsbUsed, ramp, didQualityYesterday});
+
+    const mins = durationMin;
+    const head = [];
+    if(sport==="bike_indoor") head.push("BICI INDOOR");
+    if(sport==="bike_outdoor") head.push("BICI OUTDOOR");
+    if(sport==="run") head.push("CORSA");
+
+    // Category from fatigue state (with constraints)
+    let cat = st.kind;
+    if(didQualityYesterday && !["recovery","off"].includes(cat)) cat = "endurance";
+    if((sport==="bike_outdoor" || sport==="run") && cat==="vo2") cat = "threshold";
+
+    const h = mins/60;
+    let raw = tssBase(ctl, ramp) * tssMultiplier(tsbUsed, didQualityYesterday);
+    if(sport==="run") raw *= 0.90;
+
+    const IF_RANGE = {
+      recovery:[0.45,0.60],
+      endurance:[0.60,0.75],
+      tempo:[0.75,0.88],
+      threshold:[0.88,0.98],
+      vo2:[0.88,0.95],
+    };
+    const r = IF_RANGE[cat] || IF_RANGE.endurance;
+
+    let ifNeed = Math.sqrt(raw/(h*100));
+    if(!Number.isFinite(ifNeed)) ifNeed = 0.70;
+    let ifChosen = clamp(ifNeed, r[0], r[1]);
+    ifChosen = clamp(ifChosen, 0.45, 1.05);
+    const targetTSS = Math.round(ifChosen*ifChosen*h*100);
+
+    head.push("Durata: " + mins + "′");
+    head.push("TSS: " + targetTSS);
+
+    let lines = [];
+    let variantName = "";
+    const bullet = (s)=>lines.push("• " + s);
+
+    function badgeFor(cat){
+      if(cat==="off") return {text:"Riposo", cls:"bad"};
+      if(cat==="recovery") return {text:"Recupero", cls:"bad"};
+      if(cat==="endurance") return {text:"Fondo", cls:"ok"};
+      if(cat==="tempo") return {text:"Medio", cls:"warn"};
+      if(cat==="threshold") return {text:"Soglia", cls:"warn"};
+      if(cat==="vo2") return {text:"VO2max", cls:"warn"};
+      return {text:"—", cls:""};
+    }
+    const badge = badgeFor(cat);
+
+    function pack(){
+      return {text: head.join(" · ") + "\n\n" + lines.join("\n"), meta: (variantName ? (st.tag + " · " + variantName) : st.tag), badge};
+    }
+
+    if(cat==="off"){
+      bullet("Riposo");
+      return pack();
+    }
+
+    // Warm-up / cool-down (max 10′)
+    function pickWarmCool(total){
+      let wu = Math.min(10, Math.max(5, Math.round(total*0.15)));
+      let cd = Math.min(10, Math.max(4, Math.round(total*0.10)));
+      if(wu+cd > total-5){
+        const overflow = (wu+cd) - (total-5);
+        const redCd = Math.min(Math.max(0, cd-3), overflow);
+        cd -= redCd;
+        let rem = overflow - redCd;
+        if(rem>0) wu = Math.max(3, wu-rem);
+      }
+      wu = Math.min(10, wu);
+      cd = Math.min(10, cd);
+      return {wu, cd};
+    }
+
+    const wc = pickWarmCool(mins);
+    const wu = wc.wu;
+    const cd = wc.cd;
+    const main = Math.max(0, mins - wu - cd);
+
+    // Intensity helpers (show watts if power, otherwise HR zone + bpm)
+    const zPct = {1:0.60, 2:0.70, 3:0.85, 4:1.00, 5:1.15};
+
+    function powerText(zone){
+      const p = zPct[zone] || 0.70;
+      if(!ftp) return "";
+      const w = Math.round(ftp * p);
+      return w + " W";
+    }
+
+    function hrText(zone){
+      let txt = "Z" + zone;
+      if(hrMax && hrRest){
+        const hrr = hrMax - hrRest;
+        const bounds = {
+          1:[0.50,0.60],
+          2:[0.60,0.70],
+          3:[0.70,0.80],
+          4:[0.80,0.90],
+          5:[0.90,1.00],
+        }[zone] || [0.60,0.70];
+        const lo = Math.round(hrRest + hrr*bounds[0]);
+        const hi = Math.round(hrRest + hrr*bounds[1]);
+        const mid = Math.round((lo+hi)/2);
+        txt += " (~" + mid + " bpm)";
+      }
+      return txt;
+    }
+
+    function intStr(zone){
+      return hasPower ? powerText(zone) : hrText(zone);
+    }
+
+    // Blocks (indoor structured, outdoor steady)
+    bullet("Riscaldamento " + wu + "′ — " + intStr(1));
+
+if(cat==="recovery"){
+  bullet("Facile " + main + "′ — " + intStr(1));
+  bullet("Defaticamento " + cd + "′ — " + intStr(1));
+  return pack();
+}
+
+// Variants (controlled)
+const picked = applyVariant(cat, sport, main, bullet, intStr, didQualityYesterday, tsbUsed);
+    if(picked && picked.name) variantName = picked.name;
+
+bullet("Defaticamento " + cd + "′ — " + intStr(1));
+return pack();
+
+  }
+
+
+  function validate(){
+    const dur = n(els.dur.value);
+    if(dur===null || dur<=0){
+      toast("Seleziona Durata");
+      return false;
+    }
+    const isBike = (state.sport==="bike_indoor" || state.sport==="bike_outdoor");
+    const isRun = (state.sport==="run");
+
+    if(isBike && state.hasPower){
+      const ftp = n(els.ftp.value);
+      if(ftp===null || ftp<=0){
+        toast("Inserisci FTP");
+        return false;
+      }
+    }else{
+      // HR mode for run, and for bike without power
+      const hrMax = n(isRun ? els.hrMaxRun.value : els.hrMaxBike.value);
+      const hrRest = n(isRun ? els.hrRestRun.value : els.hrRestBike.value);
+      if(hrMax===null || hrMax<=0 || hrRest===null || hrRest<=0 || hrMax<=hrRest){
+        toast("Inserisci FC max e FC riposo");
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  
+  function generate(){
+    if(!validate()) return;
+
+    const ctl = n(els.ctl.value);
+    const atl = n(els.atl.value);
+    const tsb = n(els.tsb.value);
+    const ramp = n(els.ramp.value);
+
+    const durationMin = durationMinutes(state.sport, ctl, els.dur.value);
+
+    const isRun = (state.sport==="run");
+    const isBike = (state.sport==="bike_indoor" || state.sport==="bike_outdoor");
+
+    const ftp = (isBike && state.hasPower) ? n(els.ftp.value) : null;
+    const hrMax = (!state.hasPower || isRun) ? n(isRun ? els.hrMaxRun.value : els.hrMaxBike.value) : null;
+    const hrRest = (!state.hasPower || isRun) ? n(isRun ? els.hrRestRun.value : els.hrRestBike.value) : null;
+
+    const w = buildWorkout({
+      sport: state.sport,
+      hasPower: (isBike ? state.hasPower : false),
+      didQualityYesterday: state.didQualityYesterday,
+      ctl, atl, tsb, ramp,
+      durationMin,
+      ftp,
+      hrMax,
+      hrRest
+    });
+
+    els.outText.textContent = w.text;
+    els.outMeta.textContent = w.meta;
+    els.stateBadge.textContent = w.badge.text;
+    els.stateBadge.className = "badge " + (w.badge.cls || "");
+    els.copyBtn.disabled = false;
+    save();
+    toast("Allenamento generato");
+  }
+
+
+  function copy(){
+    const txt = els.outText.textContent || "";
+    if(!txt.trim()) return;
+    navigator.clipboard?.writeText(txt).then(()=>toast("Copiato"), ()=>toast("Copia non disponibile"));
+  }
+
+  
+  function reset(){
+    els.dur.value = "";
+    els.ftp.value = "";
+    els.hrMaxBike.value = "";
+    els.hrRestBike.value = "";
+    els.hrMaxRun.value = "";
+    els.hrRestRun.value = "";
+
+    els.ctl.value = "";
+    els.atl.value = "";
+    els.tsb.value = "";
+    els.ramp.value = "";
+
+    state.hasPower = false;
+    state.didQualityYesterday = false;
+    els.powChk.checked = false;
+    els.qualChk.checked = false;
+    setSwitch(els.powSwitch, false);
+    setSwitch(els.qualSwitch, false);
+
+    setSport("bike_indoor");
+    updateVisibility();
+  if(!els.dur.value){
+    const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
+    els.dur.value = d0;
+  }
+
+    els.outText.textContent = "Inserisci i dati e genera.";
+    els.outMeta.textContent = "—";
+    els.stateBadge.textContent = "—";
+    els.stateBadge.className = "badge";
+    els.copyBtn.disabled = true;
+
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    toast("Reset");
+  }
+
+
+  // wiring
+  document.querySelectorAll('.seg button').forEach(b=>{
+    b.addEventListener('click', ()=>setSport(b.dataset.sport));
+  });
+
+  function rowToggle(wrap, chk){
+    wrap.addEventListener('click', (e)=>{
+      // If the user tapped the switch itself, the label will toggle the checkbox.
+      if(e.target && (e.target.tagName==="INPUT" || e.target.closest('input') || e.target.closest('.switchWrap'))) return;
+      chk.checked = !chk.checked;
+      chk.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+  }
+
+  function syncPower(){
+    state.hasPower = !!els.powChk.checked;
+    setSwitch(els.powSwitch, state.hasPower);
+    updateVisibility();
+    if(!els.dur.value){
+      const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
+      els.dur.value = d0;
+    }
+    save();
+  }
+
+  function syncQuality(){
+    state.didQualityYesterday = !!els.qualChk.checked;
+    setSwitch(els.qualSwitch, state.didQualityYesterday);
+    save();
+  }
+
+  rowToggle(els.powWrap, els.powChk);
+  rowToggle(els.qualWrap, els.qualChk);
+  els.powChk.addEventListener('change', syncPower);
+  els.qualChk.addEventListener('change', syncQuality);
+
+  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","ctl","atl","tsb","ramp"].forEach(id=>{
+    $(id).addEventListener('input', save, {passive:true});
+  });
+
+  // ± per valori negativi (iOS: tastierino numerico senza tasto meno)
+  document.querySelectorAll('.signBtn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const id = btn.dataset.sign;
+      const el = $(id);
+      if(!el) return;
+      if(el.value === "") return;
+      const val = n(el.value);
+      if(val===null) return;
+      el.value = String(-val);
+      save();
+      try{ el.focus({preventScroll:true}); }catch(_){ el.focus(); }
+    });
+  });
+
+
+
+  els.genBtn.addEventListener('click', generate);
+  els.copyBtn.addEventListener('click', copy);
+  els.resetBtn.addEventListener('click', reset);
+
+  // init
+  load();
+  setSport(state.sport);
+  setSwitch(els.powSwitch, state.hasPower);
+  setSwitch(els.qualSwitch, state.didQualityYesterday);
+  updateDurQuick();
+  updateVisibility();
+  if(!els.dur.value){
+    const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
+    els.dur.value = d0;
+  }
+
+  // PWA SW
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+})();
+</script>
+</body>
+</html>

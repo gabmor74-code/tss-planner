@@ -1,0 +1,45 @@
+v8.9.1
+- Fix: label versione in testata (ora corretta).
+- Cache: bump versione SW per forzare refresh.
+
+v8.9
+- Aggiunto database workout (varietà controllata) per Recupero/Fondo/Medio/Soglia/VO2max su Bici indoor/outdoor e Corsa.
+- Il planner ora pesca uno schema diverso (evita ripetizioni consecutive) mantenendo vincoli di sicurezza.
+- In output/meta mostra lo schema scelto (es. 2×20′, Progressivo, Over/Under).
+
+TSS Planner – v8.8 (planner only)
+- Fix iPhone: TSB e RAMP ora gestiscono facilmente valori negativi (pulsante ±) e parsing decimali con virgola.
+- UI: palette completamente uniforme (sfondo e card senza gradienti/trasparenze) per eliminare “colori mischiati” su Safari iOS.
+
+TSS Planner – v8.7 (planner only)
+- Fix resa colori su iPhone: superfici (card/input/bottoni) più opache per evitare “tinte”/bande dovute ai gradienti e alla trasparenza su Safari iOS.
+
+TSS Planner – v8.6 (planner only)
+- Etichette tipo seduta per esteso (al posto di END/SOG/…): Riposo, Recupero, Fondo, Medio, Soglia, VO2max.
+
+TSS Planner – v8.5 (planner only)
+- Fix struttura intervalli: recuperi sempre espliciti tra le ripetute (es. 2×8′ → 8′ + Rec + 8′), niente più righe “2× …” ambigue.
+- Fix coerenza durata: la somma dei blocchi ora combacia sempre con la Durata selezionata (niente “sforamenti” nei workout brevi).
+- Warm-up/defaticamento: minimi leggermente più flessibili (sempre ≤10′) per far “stare dentro” gli intervalli nei 30′.
+
+TSS Planner – v8.4 (planner only)
+- Target TSS non più inserito a mano: ora viene calcolato automaticamente da CTL + RAMP, corretto per TSB e per “Ieri qualità”, e coerente con la Durata scelta.
+- Fix bloccante: toggle “Misuratore di potenza” e “Ieri qualità” ora affidabili (checkbox + tap su tutta la riga).
+- Output aggiornato: intestazione con “TSS: X” e blocchi con Watt (potenza) oppure Zona FC + bpm stimati (HR).
+- Service worker: cache aggiornata (v8.4) per evitare versioni vecchie.
+
+TSS Planner – v8.3 (planner only)
+- Aggiunti: Durata (min) (obbligatoria) + scelte rapide durata.
+- Aggiunti campi condizionali: FTP (se potenza) oppure FC max/riposo (se HR) per bici e corsa.
+- Output per blocchi con riferimento: Watt (se potenza) oppure Zona FC 1–5 (se HR).
+- Riscaldamento e defaticamento sempre ≤10′.
+- Bici indoor: allenamenti più strutturati. Bici outdoor: blocchi più lunghi e costanti.
+- Validazione input + salvataggio dei nuovi campi.
+
+TSS Planner – v8.2 (planner only)
+- Rimossa completamente la navigazione a schede (Fitness/Impostazioni).
+- App semplificata: solo Planner con input CTL/ATL/TSB/RAMP + 3 sport.
+- Opzioni: Misuratore di potenza (solo bici) + “Ieri qualità”.
+- Layout mobile (iPhone) centrato e con safe-area (niente offset/bordo a sinistra).
+- Output “allenamento” unico, copiabile, senza spiegazioni nell’app.
+- PWA offline: cache di base via service worker.
