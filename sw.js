@@ -1,5 +1,5 @@
-/* TSS Planner - planner only v8.9.4 */
-const CACHE = 'tss-planner-v8.9.4.1';
+/* TSS Planner - planner only v8.9.5 */
+const CACHE = 'tss-planner-v8.9.5.0';
 const ASSETS = [
   './',
   './index.html',
@@ -25,26 +25,44 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+// Network-first for navigations (so updates propagate), cache-first for assets.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  const accept = req.headers.get('accept') || '';
+  const isHTML = req.mode === 'navigate' || accept.includes('text/html');
+
+  if (isHTML) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      try {
+        const fresh = await fetch(req);
+        // keep app shell updated
+        cache.put('./index.html', fresh.clone());
+        return fresh;
+      } catch (e) {
+        return (await cache.match('./index.html')) || new Response('Offline', { status: 503 });
+      }
+    })());
+    return;
+  }
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(req, { ignoreSearch: true });
     if (cached) return cached;
 
-    try{
+    try {
       const fresh = await fetch(req);
-      // cache same-origin only
-      const url = new URL(req.url);
-      if (url.origin === self.location.origin) {
-        cache.put(req, fresh.clone());
-      }
+      cache.put(req, fresh.clone());
       return fresh;
-    }catch(e){
-      // fallback to app shell
-      return (await cache.match('./index.html')) || new Response('Offline', {status: 503});
+    } catch (e) {
+      // fallback to app shell if available
+      return (await cache.match('./index.html')) || new Response('Offline', { status: 503 });
     }
   })());
 });

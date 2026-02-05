@@ -11,16 +11,16 @@
   <title>TSS Planner</title>
   <style>
     :root{
-      --bg:#0b0d10;
-      --card:#12151b;
-      --card2:#161a22;
+      \1#0b0d10;
+      \1#12151b;
+      \1#161a22;
       --text:#f3f3f6;
       --muted:#b8b8c2;
-      --line:#242a34;
+      \1#242a34;
       --accent:#ffb800;
       --danger:#ff5c5c;
       --ok:#45e27a;
-      --shadow: 0 10px 30px rgba(0,0,0,.40);
+      \10 10px 30px rgba(0,0,0,.40);
       --radius: 18px;
     }
     html{ color-scheme: dark; }
@@ -201,7 +201,6 @@
       border-radius: 14px;
       font-size: 14px;
       cursor:pointer;
-      touch-action: manipulation;
       user-select:none;
       transition: transform .04s ease, background .2s ease, border-color .2s ease;
     }
@@ -417,7 +416,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.9.4</div>
+          <div class="sub">Planner only · v8.9.5</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -566,7 +565,7 @@
     didQualityYesterday: false,
   };
 
-  const STORAGE_KEY = "tss_planner_v8_9_state";
+  const STORAGE_KEY = "tss_planner_v8_4_state";
 
 
 // Workout library (controlled variability)
@@ -631,7 +630,7 @@ const WORKOUT_DB = {
     bike_outdoor: [
       {id:"M-OUT-STEADY", name:"Blocco costante", minMain:20, maxMain:240, build:(m)=>{ const work=Math.max(20, Math.round(m*0.75)); const easy=Math.max(0, m-work); return [{mins:work, tag:"work"}, ...(easy?[{mins:easy, tag:"easy"}]:[])]; }},
       {id:"M-OUT-2x25", name:"2×25′", minMain:60, maxMain:150, build:(m)=>{ const rec=5, work=25, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
-      {id:"M-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.35)); const b=Math.max(20, Math.round(m*0.40)); let c=Math.max(10, m-a-b); const used=a+b+c; if(used>m){ c=Math.max(10, c-(used-m)); } if(a+b+c<m){ c += (m-(a+b+c)); } return [{mins:a, tag:"easy"},{mins:b, tag:"work"},{mins:c, tag:"work2"}]; }},
+      {id:"M-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.60)); const b=Math.max(10, m-a); return [{mins:a, tag:"easy"},{mins:b, tag:"work"}]; }},
     ],
     run: [
       {id:"M-RUN-2x10", name:"2×10′", minMain:30, maxMain:70, build:(m)=>{ const rec=3, work=10, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
@@ -678,17 +677,16 @@ const WORKOUT_DB = {
 function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, tsbUsed){
   const v = pickVariant(cat, sport, mainMin);
   const name = v ? v.name : "";
-  const isProg = !!(v && v.name === "Progressivo");
   const blocks = v ? v.build(mainMin) : [{mins: mainMin, tag:"work"}];
 
   // Zone mapping per category (conservative & controlled)
   // endurance: mostly Z2 (or Z1 if very easy)
-  // tempo: Z3 (work2 is shown a bit higher for progressivi)
-  // threshold: Z4 work
+  // tempo: Z3
+  // threshold: Z4 work, Z2 easy/rec
   // vo2: Z5 work, Z1/Z2 recoveries
   const map = {
     endurance: {work:2, work2:3, easy:1, rec:1},
-    tempo:     {work:3, work2:3, easy:2, rec:1},
+    tempo:     {work:3, work2:4, easy:2, rec:1},
     threshold: {work:4, work2:4, easy:2, rec:1},
     vo2:       {work:5, work2:4, easy:2, rec:1},
   }[cat] || {work:2, work2:2, easy:1, rec:1};
@@ -701,19 +699,12 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
   // Render blocks (always explicit: no "2×8′" without recovery)
   blocks.forEach(b=>{
     const zone = map[b.tag] ?? map.work;
-
-    // labels
     let label = "";
     if(b.tag==="rec") label = "Rec ";
-    else if(b.tag==="easy" && !isProg) label = "Facile ";
+    else if(b.tag==="easy") label = "Facile ";
+    else label = "";
 
-    // intensity level (same zone, slightly higher for progressivi controllati)
-    let level = "mid";
-    if(b.tag==="rec") level = "low";
-    else if(b.tag==="easy") level = isProg ? "mid" : "low";
-    else if(b.tag==="work2" && (cat==="tempo" || cat==="endurance")) level = "high";
-
-    bullet((label + b.mins + "′") + " — " + intStr(zone, level));
+    bullet((label + b.mins + "′") + " — " + intStr(zone));
   });
 
   return {name, id: v ? v.id : null};
@@ -1040,30 +1031,15 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     // Intensity helpers (show watts if power, otherwise HR zone + bpm)
     const zPct = {1:0.60, 2:0.70, 3:0.85, 4:1.00, 5:1.15};
 
-    function clampPct(p){ return Math.max(0.50, Math.min(1.15, p)); }
-
-    function powerText(zone, level){
-      let p = zPct[zone] || 0.70;
-      // "high" makes the SAME zone slightly harder (progressivi controllati)
-      if(level==="high"){
-        if(zone===3) p += 0.04;
-        else if(zone===2) p += 0.03;
-        else if(zone===4) p += 0.02;
-      } else if(level==="low"){
-        if(zone===2) p -= 0.03;
-        if(zone===3) p -= 0.04;
-      }
-      p = clampPct(p);
+    function powerText(zone){
+      const p = zPct[zone] || 0.70;
       if(!ftp) return "";
       const w = Math.round(ftp * p);
       return w + " W";
     }
 
-    function hrText(zone, level){
-      let suffix = "";
-      if(level==="high" && (zone===2 || zone===3)) suffix = "+";
-      let txt = "Z" + zone + suffix;
-
+    function hrText(zone){
+      let txt = "Z" + zone;
       if(hrMax && hrRest){
         const hrr = hrMax - hrRest;
         const bounds = {
@@ -1073,30 +1049,24 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
           4:[0.80,0.90],
           5:[0.90,1.00],
         }[zone] || [0.60,0.70];
-
         const lo = Math.round(hrRest + hrr*bounds[0]);
         const hi = Math.round(hrRest + hrr*bounds[1]);
-
-        let target = Math.round((lo+hi)/2);
-        if(level==="high") target = Math.round((target+hi)/2);
-        if(level==="low")  target = Math.round((target+lo)/2);
-
-        txt += " (~" + target + " bpm)";
+        const mid = Math.round((lo+hi)/2);
+        txt += " (~" + mid + " bpm)";
       }
       return txt;
     }
 
-    function intStr(zone, level){
-      return hasPower ? powerText(zone, level) : hrText(zone, level);
+    function intStr(zone){
+      return hasPower ? powerText(zone) : hrText(zone);
     }
 
     // Blocks (indoor structured, outdoor steady)
- (indoor structured, outdoor steady)
-    bullet("Riscaldamento " + wu + "′ — " + intStr(1,"low"));
+    bullet("Riscaldamento " + wu + "′ — " + intStr(1));
 
 if(cat==="recovery"){
-  bullet("Facile " + main + "′ — " + intStr(1,"low"));
-  bullet("Defaticamento " + cd + "′ — " + intStr(1,"low"));
+  bullet("Facile " + main + "′ — " + intStr(1));
+  bullet("Defaticamento " + cd + "′ — " + intStr(1));
   return pack();
 }
 
@@ -1104,7 +1074,7 @@ if(cat==="recovery"){
 const picked = applyVariant(cat, sport, main, bullet, intStr, didQualityYesterday, tsbUsed);
     if(picked && picked.name) variantName = picked.name;
 
-bullet("Defaticamento " + cd + "′ — " + intStr(1,"low"));
+bullet("Defaticamento " + cd + "′ — " + intStr(1));
 return pack();
 
   }
@@ -1223,38 +1193,36 @@ return pack();
 
 
   // wiring
-  // Sport tabs: reliable on desktop + iOS (keyboard open)
-  const segEl = document.querySelector('.seg');
-  if(segEl){
-    const actSport = (btn)=>{
+  function bindTap(el, fn){
+    let last = 0;
+    const run = (e)=>{
+      const now = Date.now();
+      if(now - last < 450) return; // dedupe pointer+click
+      last = now;
+      // iOS: if a number field is focused, first tap may just blur — do it ourselves
       try{
         const ae = document.activeElement;
         if(ae && ae.blur) ae.blur();
-      }catch(e){}
-      setSport(btn.dataset.sport);
+      }catch(_){}
+      fn(e);
     };
-
-    // Pointer events cover mouse + touch
-    segEl.addEventListener('pointerup', (e)=>{
-      const btn = e.target && e.target.closest ? e.target.closest('button[data-sport]') : null;
-      if(!btn) return;
-      actSport(btn);
-    });
-
-    // Fallback for iOS Safari edge cases
-    segEl.addEventListener('touchend', (e)=>{
-      const btn = e.target && e.target.closest ? e.target.closest('button[data-sport]') : null;
-      if(!btn) return;
-      actSport(btn);
-    }, {passive:true});
-  }else{
-    document.querySelectorAll('.seg button').forEach(b=>{
-      b.addEventListener('click', ()=>setSport(b.dataset.sport));
-    });
+    if(window.PointerEvent){
+      el.addEventListener('pointerup', (e)=>{
+        if(e.pointerType==='mouse' && e.button!==0) return;
+        run(e);
+      });
+    }else{
+      el.addEventListener('touchend', (e)=>run(e), {passive:true});
+    }
+    el.addEventListener('click', (e)=>run(e));
   }
 
-function rowToggle(wrap, chk){
-    wrap.addEventListener('click', (e)=>{
+  document.querySelectorAll('.seg button').forEach(b=>{
+    bindTap(b, ()=>setSport(b.dataset.sport));
+  });
+
+  function rowToggle(wrap, chk){
+    bindTap(wrap, (e)=>{
       // If the user tapped the switch itself, the label will toggle the checkbox.
       if(e.target && (e.target.tagName==="INPUT" || e.target.closest('input') || e.target.closest('.switchWrap'))) return;
       chk.checked = !chk.checked;
@@ -1325,7 +1293,16 @@ function rowToggle(wrap, chk){
   // PWA SW
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>{
-      navigator.serviceWorker.register('sw.js').catch(()=>{});
+      navigator.serviceWorker.register('./sw.js').then((reg)=>{
+        try{ reg.update && reg.update(); }catch(_){}
+        // auto-refresh once when a new SW takes control (keeps users off stale cached versions)
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+          if(refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+      }).catch(()=>{});
     });
   }
 })();

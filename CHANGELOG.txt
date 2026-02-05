@@ -1,16 +1,8 @@
-v8.9.4
-- Fix: selezione sport ripristinata (usa pointerup/touchend delegati, funziona anche su PC).
-- Cache: bump versione SW.
-
-v8.9.3
-- Fix iPhone: selezione sport ora sempre cliccabile anche con tastiera aperta (gestione touch + blur).
-- UI: ripristinati correttamente i colori uniformi (variabili CSS sistemate).
-- Cache: bump versione SW.
-
-v8.9.2
-- Fix: workout "Progressivo" (Medio outdoor) ora davvero progressivo (Z2→Z3→Z3+ / watt in crescita), niente più blocchi identici.
-- Output: nei progressivi i blocchi "base" non vengono etichettati come "Facile".
-- Cache: bump versione SW.
+v8.9.5
+- FIX critico: ripristinati selettori Sport / Misuratore di potenza / Ieri qualità (errore JS bloccante nelle versioni 8.9.2–8.9.3).
+- Medio > Progressivo (Bici outdoor): ora è davvero progressivo (Z2 → Z3), non due blocchi identici.
+- Varietà controllata: per "Medio" i blocchi 'work2' sono ora più intensi (Z4) per progressivi/over-under indoor.
+- Cache: service worker aggiornato (HTML network-first) per evitare versioni "bloccate" in cache.
 
 v8.9.1
 - Fix: label versione in testata (ora corretta).
