@@ -416,7 +416,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.9.1</div>
+          <div class="sub">Planner only · v8.9.2</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -630,7 +630,7 @@ const WORKOUT_DB = {
     bike_outdoor: [
       {id:"M-OUT-STEADY", name:"Blocco costante", minMain:20, maxMain:240, build:(m)=>{ const work=Math.max(20, Math.round(m*0.75)); const easy=Math.max(0, m-work); return [{mins:work, tag:"work"}, ...(easy?[{mins:easy, tag:"easy"}]:[])]; }},
       {id:"M-OUT-2x25", name:"2×25′", minMain:60, maxMain:150, build:(m)=>{ const rec=5, work=25, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
-      {id:"M-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.60)); const b=Math.max(10, m-a); return [{mins:a, tag:"work"},{mins:b, tag:"work2"}]; }},
+      {id:"M-OUT-PROG", name:"Progressivo", minMain:35, maxMain:200, build:(m)=>{ const a=Math.max(15, Math.round(m*0.35)); const b=Math.max(20, Math.round(m*0.40)); let c=Math.max(10, m-a-b); const used=a+b+c; if(used>m){ c=Math.max(10, c-(used-m)); } if(a+b+c<m){ c += (m-(a+b+c)); } return [{mins:a, tag:"easy"},{mins:b, tag:"work"},{mins:c, tag:"work2"}]; }},
     ],
     run: [
       {id:"M-RUN-2x10", name:"2×10′", minMain:30, maxMain:70, build:(m)=>{ const rec=3, work=10, reps=2; const used=reps*work+(reps-1)*rec; const rem=Math.max(0,m-used); return [...splitInto(reps,work,rec), ...(rem?[{mins:rem, tag:"easy"}]:[])]; }},
@@ -677,12 +677,13 @@ const WORKOUT_DB = {
 function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, tsbUsed){
   const v = pickVariant(cat, sport, mainMin);
   const name = v ? v.name : "";
+  const isProg = !!(v && v.name === "Progressivo");
   const blocks = v ? v.build(mainMin) : [{mins: mainMin, tag:"work"}];
 
   // Zone mapping per category (conservative & controlled)
   // endurance: mostly Z2 (or Z1 if very easy)
-  // tempo: Z3
-  // threshold: Z4 work, Z2 easy/rec
+  // tempo: Z3 (work2 is shown a bit higher for progressivi)
+  // threshold: Z4 work
   // vo2: Z5 work, Z1/Z2 recoveries
   const map = {
     endurance: {work:2, work2:3, easy:1, rec:1},
@@ -699,12 +700,19 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
   // Render blocks (always explicit: no "2×8′" without recovery)
   blocks.forEach(b=>{
     const zone = map[b.tag] ?? map.work;
+
+    // labels
     let label = "";
     if(b.tag==="rec") label = "Rec ";
-    else if(b.tag==="easy") label = "Facile ";
-    else label = "";
+    else if(b.tag==="easy" && !isProg) label = "Facile ";
 
-    bullet((label + b.mins + "′") + " — " + intStr(zone));
+    // intensity level (same zone, slightly higher for progressivi controllati)
+    let level = "mid";
+    if(b.tag==="rec") level = "low";
+    else if(b.tag==="easy") level = isProg ? "mid" : "low";
+    else if(b.tag==="work2" && (cat==="tempo" || cat==="endurance")) level = "high";
+
+    bullet((label + b.mins + "′") + " — " + intStr(zone, level));
   });
 
   return {name, id: v ? v.id : null};
@@ -1031,15 +1039,30 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     // Intensity helpers (show watts if power, otherwise HR zone + bpm)
     const zPct = {1:0.60, 2:0.70, 3:0.85, 4:1.00, 5:1.15};
 
-    function powerText(zone){
-      const p = zPct[zone] || 0.70;
+    function clampPct(p){ return Math.max(0.50, Math.min(1.15, p)); }
+
+    function powerText(zone, level){
+      let p = zPct[zone] || 0.70;
+      // "high" makes the SAME zone slightly harder (progressivi controllati)
+      if(level==="high"){
+        if(zone===3) p += 0.04;
+        else if(zone===2) p += 0.03;
+        else if(zone===4) p += 0.02;
+      } else if(level==="low"){
+        if(zone===2) p -= 0.03;
+        if(zone===3) p -= 0.04;
+      }
+      p = clampPct(p);
       if(!ftp) return "";
       const w = Math.round(ftp * p);
       return w + " W";
     }
 
-    function hrText(zone){
-      let txt = "Z" + zone;
+    function hrText(zone, level){
+      let suffix = "";
+      if(level==="high" && (zone===2 || zone===3)) suffix = "+";
+      let txt = "Z" + zone + suffix;
+
       if(hrMax && hrRest){
         const hrr = hrMax - hrRest;
         const bounds = {
@@ -1049,24 +1072,30 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
           4:[0.80,0.90],
           5:[0.90,1.00],
         }[zone] || [0.60,0.70];
+
         const lo = Math.round(hrRest + hrr*bounds[0]);
         const hi = Math.round(hrRest + hrr*bounds[1]);
-        const mid = Math.round((lo+hi)/2);
-        txt += " (~" + mid + " bpm)";
+
+        let target = Math.round((lo+hi)/2);
+        if(level==="high") target = Math.round((target+hi)/2);
+        if(level==="low")  target = Math.round((target+lo)/2);
+
+        txt += " (~" + target + " bpm)";
       }
       return txt;
     }
 
-    function intStr(zone){
-      return hasPower ? powerText(zone) : hrText(zone);
+    function intStr(zone, level){
+      return hasPower ? powerText(zone, level) : hrText(zone, level);
     }
 
     // Blocks (indoor structured, outdoor steady)
-    bullet("Riscaldamento " + wu + "′ — " + intStr(1));
+ (indoor structured, outdoor steady)
+    bullet("Riscaldamento " + wu + "′ — " + intStr(1,"low"));
 
 if(cat==="recovery"){
-  bullet("Facile " + main + "′ — " + intStr(1));
-  bullet("Defaticamento " + cd + "′ — " + intStr(1));
+  bullet("Facile " + main + "′ — " + intStr(1,"low"));
+  bullet("Defaticamento " + cd + "′ — " + intStr(1,"low"));
   return pack();
 }
 
@@ -1074,7 +1103,7 @@ if(cat==="recovery"){
 const picked = applyVariant(cat, sport, main, bullet, intStr, didQualityYesterday, tsbUsed);
     if(picked && picked.name) variantName = picked.name;
 
-bullet("Defaticamento " + cd + "′ — " + intStr(1));
+bullet("Defaticamento " + cd + "′ — " + intStr(1,"low"));
 return pack();
 
   }

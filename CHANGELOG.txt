@@ -1,3 +1,8 @@
+v8.9.2
+- Fix: workout "Progressivo" (Medio outdoor) ora davvero progressivo (Z2→Z3→Z3+ / watt in crescita), niente più blocchi identici.
+- Output: nei progressivi i blocchi "base" non vengono etichettati come "Facile".
+- Cache: bump versione SW.
+
 v8.9.1
 - Fix: label versione in testata (ora corretta).
 - Cache: bump versione SW per forzare refresh.
