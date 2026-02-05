@@ -417,7 +417,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.9.3</div>
+          <div class="sub">Planner only · v8.9.4</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -1223,28 +1223,35 @@ return pack();
 
 
   // wiring
-  let _lastTouchAt = 0;
-  document.querySelectorAll('.seg button').forEach(b=>{
-    const act = ()=>{
-      // iOS: when a number field is focused, the first tap may only blur the field.
+  // Sport tabs: reliable on desktop + iOS (keyboard open)
+  const segEl = document.querySelector('.seg');
+  if(segEl){
+    const actSport = (btn)=>{
       try{
         const ae = document.activeElement;
         if(ae && ae.blur) ae.blur();
       }catch(e){}
-      setSport(b.dataset.sport);
+      setSport(btn.dataset.sport);
     };
 
-    b.addEventListener('touchend', ()=>{
-      _lastTouchAt = Date.now();
-      act();
-    }, {passive:true});
-
-    b.addEventListener('click', ()=>{
-      // avoid double trigger after touchend
-      if(Date.now() - _lastTouchAt < 650) return;
-      act();
+    // Pointer events cover mouse + touch
+    segEl.addEventListener('pointerup', (e)=>{
+      const btn = e.target && e.target.closest ? e.target.closest('button[data-sport]') : null;
+      if(!btn) return;
+      actSport(btn);
     });
-  });
+
+    // Fallback for iOS Safari edge cases
+    segEl.addEventListener('touchend', (e)=>{
+      const btn = e.target && e.target.closest ? e.target.closest('button[data-sport]') : null;
+      if(!btn) return;
+      actSport(btn);
+    }, {passive:true});
+  }else{
+    document.querySelectorAll('.seg button').forEach(b=>{
+      b.addEventListener('click', ()=>setSport(b.dataset.sport));
+    });
+  }
 
 function rowToggle(wrap, chk){
     wrap.addEventListener('click', (e)=>{
