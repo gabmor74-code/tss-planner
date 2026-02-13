@@ -11,16 +11,16 @@
   <title>TSS Planner</title>
   <style>
     :root{
-      \1#0b0d10;
-      \1#12151b;
-      \1#161a22;
+      --bg:#0b0d10;
+      --card:#12151b;
+      --card2:#161a22;
       --text:#f3f3f6;
       --muted:#b8b8c2;
-      \1#242a34;
+      --line:#242a34;
       --accent:#ffb800;
       --danger:#ff5c5c;
       --ok:#45e27a;
-      \10 10px 30px rgba(0,0,0,.40);
+      --shadow: 0 10px 30px rgba(0,0,0,.40);
       --radius: 18px;
     }
     html{ color-scheme: dark; }
@@ -151,7 +151,22 @@
       font-size: 16px;
       outline: none;
     }
+    input[type="text"], select{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #0b0d10;
+      color: var(--text);
+      padding: 12px 12px;
+      font-size: 16px;
+      outline: none;
+      appearance: none;
+    }
     input[type="number"]:focus{
+      border-color: rgba(255,184,0,.55);
+      box-shadow: 0 0 0 3px rgba(255,184,0,.14);
+    }
+    input[type="text"]:focus, select:focus{
       border-color: rgba(255,184,0,.55);
       box-shadow: 0 0 0 3px rgba(255,184,0,.14);
     }
@@ -367,6 +382,42 @@
     .badge.warn{ border-color: rgba(255,184,0,.45); background: rgba(255,184,0,.12); color: #fff0c9; }
     .badge.bad{ border-color: rgba(255,92,92,.45); background: rgba(255,92,92,.12); color: #ffd1d1; }
 
+    .outbadges{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      align-items:flex-end;
+      flex: 0 0 auto;
+    }
+    .semaforo{
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      user-select:none;
+    }
+    .light{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+      opacity: .55;
+    }
+    .light.on{ opacity: 1; }
+    .light.g.on{ background: var(--ok); }
+    .light.y.on{ background: var(--accent); }
+    .light.r.on{ background: var(--danger); }
+    .readyTxt{
+      font-size: 12px;
+      margin-left: 4px;
+      letter-spacing: .2px;
+    }
+
     .toast{
       position: fixed;
       left: 50%;
@@ -416,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.9.5</div>
+          <div class="sub">Planner only · v8.10.0</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -484,7 +535,46 @@
               <button class="signBtn" type="button" data-sign="ramp" aria-label="Cambia segno RAMP">±</button>
             </div>
           </label>
+        
+        <div class="grid" aria-label="Check-in (manuale)">
+          <label>Sleep (h)
+            <input inputmode="decimal" type="number" step="0.1" min="0" id="sleepH" placeholder="es. 7.5" />
+          </label>
+          <label>Sleep score
+            <input inputmode="numeric" type="number" step="1" min="0" max="100" id="sleepScore" placeholder="es. 84" />
+          </label>
+          <label>HRV (ms)
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrv" placeholder="es. 64" />
+          </label>
+          <label>HRV 7g (ms)
+            <input inputmode="numeric" type="number" step="1" min="0" id="hrv7" placeholder="es. 54" />
+          </label>
+          <label>RHR (bpm)
+            <input inputmode="numeric" type="number" step="1" min="0" id="rhr" placeholder="es. 40" />
+          </label>
+          <label>Gambe (1-5)
+            <input inputmode="numeric" type="number" step="1" min="1" max="5" id="legs" placeholder="1-5" />
+          </label>
+          <label>Infortunio / dolore (0-10)
+            <input inputmode="numeric" type="number" step="1" min="0" max="10" id="injPain" placeholder="0-10" />
+          </label>
+          <label id="injAreaWrap" style="display:none">Dove?
+            <input type="text" id="injArea" placeholder="es. caviglia sx, ginocchio, schiena" />
+          </label>
+          <label id="injImpactWrap" style="display:none">Impatto
+            <select id="injImpact">
+              <option value="auto">Auto (sport di oggi)</option>
+              <option value="run">Solo corsa</option>
+              <option value="bike">Solo bici</option>
+              <option value="both">Corsa + bici</option>
+            </select>
+          </label>
+          <label>Carbo snack (g)
+            <input inputmode="decimal" type="number" step="0.1" min="0" id="snackCho" placeholder="es. 20.6" />
+          </label>
         </div>
+
+</div>
 
         <div class="grid" aria-label="Opzioni">
           <div class="toggle" id="powWrap" aria-label="Misuratore di potenza">
@@ -524,7 +614,15 @@
           <div class="t">Allenamento di oggi</div>
           <div class="m" id="outMeta">—</div>
         </div>
-        <div class="badge" id="stateBadge">—</div>
+        <div class="outbadges" aria-label="Stato giornata">
+          <div class="badge" id="stateBadge">—</div>
+          <div class="semaforo" id="readySem" aria-label="Readiness">
+            <span class="light g" aria-hidden="true"></span>
+            <span class="light y" aria-hidden="true"></span>
+            <span class="light r" aria-hidden="true"></span>
+            <span class="readyTxt" id="readyTxt">—</span>
+          </div>
+        </div>
       </div>
       <div class="output" id="outText">Inserisci i dati e genera.</div>
     </section>
@@ -550,8 +648,22 @@
     hrMaxRun: $("hrMaxRun"),
     hrRestRun: $("hrRestRun"),
 
+    sleepH: $("sleepH"),
+    sleepScore: $("sleepScore"),
+    hrv: $("hrv"),
+    hrv7: $("hrv7"),
+    rhr: $("rhr"),
+    legs: $("legs"),
+    injPain: $("injPain"),
+    injArea: $("injArea"),
+    injAreaWrap: $("injAreaWrap"),
+    injImpact: $("injImpact"),
+    injImpactWrap: $("injImpactWrap"),
+    snackCho: $("snackCho"),
+
     genBtn: $("genBtn"), copyBtn: $("copyBtn"), resetBtn: $("resetBtn"),
     outText: $("outText"), outMeta: $("outMeta"), stateBadge: $("stateBadge"),
+    readySem: $("readySem"), readyTxt: $("readyTxt"),
     powWrap: $("powWrap"), powSwitch: $("powSwitch"),
     powChk: $("powChk"),
     qualWrap: $("qualWrap"), qualSwitch: $("qualSwitch"),
@@ -565,7 +677,9 @@
     didQualityYesterday: false,
   };
 
-  const STORAGE_KEY = "tss_planner_v8_4_state";
+  // Storage
+  const STORAGE_KEY = "tss_planner_v8_10_state";
+  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_4_state"];
 
 
 // Workout library (controlled variability)
@@ -765,6 +879,40 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     els.hrGridRun.style.display = isRun ? "" : "none";
   }
 
+  function updateInjuryUI(){
+    // Show extra injury fields only if a pain value is present
+    const p = n(els.injPain.value);
+    const show = (p!=null && p > 0);
+    if(els.injAreaWrap) els.injAreaWrap.style.display = show ? "" : "none";
+    if(els.injImpactWrap) els.injImpactWrap.style.display = show ? "" : "none";
+    if(show){
+      if(!els.injImpact.value) els.injImpact.value = "auto";
+    }
+  }
+
+  function setReadinessUI(rd){
+    const g = els.readySem?.querySelector('.light.g');
+    const y = els.readySem?.querySelector('.light.y');
+    const r = els.readySem?.querySelector('.light.r');
+    [g,y,r].forEach(el=>{ if(el) el.classList.remove('on'); });
+
+    const label = {green:"VERDE", yellow:"GIALLO", red:"ROSSO"};
+    let txt = "—";
+    let title = "Readiness";
+    if(rd && rd.level){
+      txt = label[rd.level] || String(rd.level).toUpperCase();
+      if(rd.level==="green" && g) g.classList.add('on');
+      else if(rd.level==="yellow" && y) y.classList.add('on');
+      else if(rd.level==="red" && r) r.classList.add('on');
+      title = "Readiness " + txt + (rd.reasons && rd.reasons.length ? " — " + rd.reasons.join(", ") : "");
+    }
+    if(els.readyTxt) els.readyTxt.textContent = txt;
+    if(els.readySem){
+      els.readySem.title = title;
+      els.readySem.setAttribute('aria-label', title);
+    }
+  }
+
 
   
   function setSport(s){
@@ -783,6 +931,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
     updateDurQuick();
     updateVisibility();
+    updateInjuryUI();
   if(!els.dur.value){
     const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
     els.dur.value = d0;
@@ -802,6 +951,16 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       hrRestBike: els.hrRestBike.value,
       hrMaxRun: els.hrMaxRun.value,
       hrRestRun: els.hrRestRun.value,
+      sleepH: els.sleepH.value,
+      sleepScore: els.sleepScore.value,
+      hrv: els.hrv.value,
+      hrv7: els.hrv7.value,
+      rhr: els.rhr.value,
+      legs: els.legs.value,
+      injPain: els.injPain.value,
+      injArea: els.injArea.value,
+      injImpact: els.injImpact.value,
+      snackCho: els.snackCho.value,
       ctl: els.ctl.value, atl: els.atl.value, tsb: els.tsb.value, ramp: els.ramp.value
     };
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }catch(e){}
@@ -809,7 +968,14 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
   function load(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      let migrated = false;
+      if(!raw){
+        for(const k of STORAGE_KEYS_MIGRATE){
+          const r = localStorage.getItem(k);
+          if(r){ raw = r; migrated = true; break; }
+        }
+      }
       if(!raw) return;
       const p = JSON.parse(raw);
       if(p.sport) setSport(p.sport);
@@ -830,6 +996,25 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       if(p.hrRestBike!=null) els.hrRestBike.value = p.hrRestBike;
       if(p.hrMaxRun!=null) els.hrMaxRun.value = p.hrMaxRun;
       if(p.hrRestRun!=null) els.hrRestRun.value = p.hrRestRun;
+      if(p.sleepH!=null) els.sleepH.value = p.sleepH;
+      if(p.sleepScore!=null) els.sleepScore.value = p.sleepScore;
+      if(p.hrv!=null) els.hrv.value = p.hrv;
+      if(p.hrv7!=null) els.hrv7.value = p.hrv7;
+      if(p.rhr!=null) els.rhr.value = p.rhr;
+      if(p.legs!=null) els.legs.value = p.legs;
+      // Injury (new) + legacy migration from "ankle"
+      if(p.injPain!=null) els.injPain.value = p.injPain;
+      if((p.injPain==null || p.injPain==="") && p.ankle!=null) els.injPain.value = p.ankle;
+      if(p.injArea!=null) els.injArea.value = p.injArea;
+      if((p.injArea==null || p.injArea==="") && p.ankle!=null) els.injArea.value = "caviglia";
+      if(p.injImpact!=null) els.injImpact.value = p.injImpact;
+      if(p.snackCho!=null) els.snackCho.value = p.snackCho;
+      if(!els.snackCho.value) els.snackCho.value = "20.6";
+
+      if(migrated){
+        try{ localStorage.removeItem(STORAGE_KEYS_MIGRATE[0]); }catch(_){ }
+        save();
+      }
     }catch(e){}
   }
 
@@ -860,6 +1045,105 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     else m *= 1.20;
     return m;
   }
+  function computeReadiness({
+    sleepH, sleepScore,
+    hrv, hrv7,
+    rhr, rhrBase,
+    legs,
+    injuryPain, injuryArea, injuryImpact,
+    sport,
+    tsb
+  }){
+    // Returns: {level: "green"|"yellow"|"red", reasons: string[], runBlock: boolean, bikeBlock: boolean}
+    let level = "green";
+    const reasons = [];
+    const bump = (lvl)=>{
+      if(level==="red") return;
+      if(lvl==="red") level="red";
+      else if(lvl==="yellow" && level==="green") level="yellow";
+    };
+
+    // Sleep
+    if(sleepH!=null){
+      if(sleepH < 6){ bump("red"); reasons.push("sleep <6h"); }
+      else if(sleepH < 7){ bump("yellow"); reasons.push("sleep 6–7h"); }
+    }else if(sleepScore!=null){
+      if(sleepScore < 60){ bump("red"); reasons.push("sleep score <60"); }
+      else if(sleepScore < 75){ bump("yellow"); reasons.push("sleep score 60–74"); }
+    }
+
+    // RHR vs baseline
+    if(rhr!=null && rhrBase!=null){
+      const d = Math.round(rhr - rhrBase);
+      if(d >= 6){ bump("red"); reasons.push("RHR +" + d); }
+      else if(d >= 3){ bump("yellow"); reasons.push("RHR +" + d); }
+    }
+
+    // HRV vs 7d baseline (only penalize drops)
+    if(hrv!=null && hrv7!=null && hrv7>0){
+      const pct = (hrv - hrv7) / hrv7 * 100;
+      const p = Math.round(pct);
+      if(p <= -12){ bump("red"); reasons.push("HRV " + p + "%"); }
+      else if(p <= -6){ bump("yellow"); reasons.push("HRV " + p + "%"); }
+    }
+
+    // Subjective legs
+    if(legs!=null){
+      if(legs >= 4){ bump("red"); reasons.push("gambe " + legs + "/5"); }
+      else if(legs === 3){ bump("yellow"); reasons.push("gambe 3/5"); }
+    }
+
+    // Guardrail from TSB (if provided)
+    if(tsb!=null){
+      if(tsb <= -25){ bump("red"); reasons.push("TSB " + tsb); }
+      else if(tsb <= -10){ bump("yellow"); reasons.push("TSB " + tsb); }
+    }
+
+    // Injury (generic)
+    let runBlock = false;
+    let bikeBlock = false;
+
+    if(injuryPain!=null && injuryPain > 0){
+      const area = (injuryArea || "").trim();
+      const impact = (injuryImpact || "auto").trim();
+      let affectsRun = false;
+      let affectsBike = false;
+
+      if(impact === "both"){ affectsRun = true; affectsBike = true; }
+      else if(impact === "run"){ affectsRun = true; }
+      else if(impact === "bike"){ affectsBike = true; }
+      else {
+        // auto: assume the injury is relevant to today's sport
+        affectsRun = (sport === "run");
+        affectsBike = (sport === "bike_indoor" || sport === "bike_outdoor");
+      }
+
+      if(injuryPain >= 7){ bump("red"); }
+      else if(injuryPain >= 4){ bump("yellow"); }
+      else if(injuryPain > 2){ bump("yellow"); }
+
+      let lab = "infortunio " + injuryPain + "/10";
+      if(area) lab += " (" + area + ")";
+      reasons.push(lab);
+
+      // Safety blocks (conservative): avoid running with pain >2 if it affects running.
+      runBlock = affectsRun && injuryPain > 2;
+      // For bike we only hard-block intensity if pain is clearly significant.
+      bikeBlock = affectsBike && injuryPain > 4;
+    }
+
+    return {level, reasons, runBlock, bikeBlock};
+  }
+
+  function degradeCat(cat, steps){
+    const order = ["vo2","threshold","tempo","endurance","recovery","off"];
+    let i = order.indexOf(cat);
+    if(i < 0) return cat;
+    i = Math.min(order.length-1, i + steps);
+    return order[i];
+  }
+
+
 
   function computeState({ctl, atl, tsb, ramp, didQualityYesterday}){
     // Categories from TSB + ramp modifier + quality yesterday
@@ -944,11 +1228,24 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       ctl, atl, tsb, ramp,
       durationMin,
       ftp,
-      hrMax, hrRest
+      hrMax, hrRest,
+      sleepH, sleepScore, hrv, hrv7, rhr, legs,
+      injPain, injArea, injImpact,
+      snackCho
     } = opts;
 
     const tsbUsed = calcTSB(ctl, atl, tsb);
     const st = computeState({ctl, atl, tsb: tsbUsed, ramp, didQualityYesterday});
+    const rd = computeReadiness({
+      sleepH, sleepScore, hrv, hrv7,
+      rhr, rhrBase: hrRest,
+      legs,
+      injuryPain: injPain,
+      injuryArea: injArea,
+      injuryImpact: injImpact,
+      sport,
+      tsb: tsbUsed
+    });
 
     const mins = durationMin;
     const head = [];
@@ -960,6 +1257,26 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     let cat = st.kind;
     if(didQualityYesterday && !["recovery","off"].includes(cat)) cat = "endurance";
     if((sport==="bike_outdoor" || sport==="run") && cat==="vo2") cat = "threshold";
+
+    // Apply readiness (manual check-in): downgrade intensity when needed
+    if(rd && rd.level==="yellow"){
+      if(cat==="vo2" || cat==="threshold") cat = degradeCat(cat, 2); // avoid quality
+      else if(cat==="tempo") cat = degradeCat(cat, 1);
+    }else if(rd && rd.level==="red"){
+      // Prefer true rest after quality / deep fatigue, otherwise recovery
+      if(didQualityYesterday || (tsbUsed!==null && tsbUsed<=-15)) cat = "off";
+      else cat = "recovery";
+    }
+
+    if(sport==="run" && rd && rd.runBlock){
+      if(cat!=="off") cat = "recovery";
+    }
+
+    const isBikeSport = (sport==="bike_indoor" || sport==="bike_outdoor");
+    if(isBikeSport && rd && rd.bikeBlock){
+      // if an injury likely affects cycling, avoid intensity.
+      if(["vo2","threshold","tempo"].includes(cat)) cat = "endurance";
+    }
 
     const h = mins/60;
     let raw = tssBase(ctl, ramp) * tssMultiplier(tsbUsed, didQualityYesterday);
@@ -976,16 +1293,38 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
     let ifNeed = Math.sqrt(raw/(h*100));
     if(!Number.isFinite(ifNeed)) ifNeed = 0.70;
-    let ifChosen = clamp(ifNeed, r[0], r[1]);
+    // TSS caps (coach rules): apply mainly for sessions ≤95′ (manual days)
+    const TSS_CAPS = {
+      recovery:[20,35],
+      endurance:[40,50],
+      tempo:[55,70],
+      threshold:[75,85],
+      vo2:[75,85],
+    };
+
+    let loIF = r[0], hiIF = r[1];
+    if(mins <= 95){
+      const cap = TSS_CAPS[cat];
+      if(cap){
+        const ifMinCap = Math.sqrt(cap[0]/(h*100));
+        const ifMaxCap = Math.sqrt(cap[1]/(h*100));
+        loIF = Math.max(loIF, ifMinCap);
+        hiIF = Math.min(hiIF, ifMaxCap);
+      }
+    }
+
+    let ifChosen = clamp(ifNeed, loIF, hiIF);
     ifChosen = clamp(ifChosen, 0.45, 1.05);
     const targetTSS = Math.round(ifChosen*ifChosen*h*100);
 
     head.push("Durata: " + mins + "′");
     head.push("TSS: " + targetTSS);
+    head.push("IF: " + ifChosen.toFixed(2));
 
     let lines = [];
     let variantName = "";
     const bullet = (s)=>lines.push("• " + s);
+    const plain = (s)=>lines.push(s);
 
     function badgeFor(cat){
       if(cat==="off") return {text:"Riposo", cls:"bad"};
@@ -999,7 +1338,19 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     const badge = badgeFor(cat);
 
     function pack(){
-      return {text: head.join(" · ") + "\n\n" + lines.join("\n"), meta: (variantName ? (st.tag + " · " + variantName) : st.tag), badge};
+      const RD_LABEL = {green:"VERDE", yellow:"GIALLO", red:"ROSSO"};
+      const rdShort = (rd && rd.level) ? (RD_LABEL[rd.level] || rd.level.toUpperCase()) : "";
+      const rs = (rd && rd.reasons && rd.reasons.length) ? rd.reasons : [];
+      const rsShort = rs.length ? (" (" + rs.slice(0,2).join(", ") + (rs.length>2 ? ", …" : "") + ")") : "";
+      const metaCore = st.tag + (rdShort ? (" · Readiness " + rdShort + rsShort) : "");
+      const meta = (variantName ? (metaCore + " · " + variantName) : metaCore);
+      return {
+        text: head.join(" · ") + "\n\n" + lines.join("\n"),
+        meta,
+        badge,
+        readiness: rd || null,
+        summary: {cat, targetTSS, ifChosen}
+      };
     }
 
     if(cat==="off"){
@@ -1029,7 +1380,9 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     const main = Math.max(0, mins - wu - cd);
 
     // Intensity helpers (show watts if power, otherwise HR zone + bpm)
-    const zPct = {1:0.60, 2:0.70, 3:0.85, 4:1.00, 5:1.15};
+    // Potenza per zone (semplificate) — coerenti con i range tipici e con i workout .zwo
+    // Z1 ~55% FTP, Z2 ~70% FTP, Z3 ~85% FTP, Z4 ~100% FTP, Z5 ~118% FTP
+    const zPct = {1:0.55, 2:0.70, 3:0.85, 4:1.00, 5:1.18};
 
     function powerText(zone){
       const p = zPct[zone] || 0.70;
@@ -1061,12 +1414,73 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       return hasPower ? powerText(zone) : hrText(zone);
     }
 
+    function appendNutrition(){
+      if(cat==="off") return;
+      const unitCho = (snackCho!=null && snackCho>0) ? snackCho : 20.6;
+      const hours = mins/60;
+      const isIndoor = (sport==="bike_indoor");
+      const isRunSport = (sport==="run");
+
+      let choRange = [0,0];
+      if(cat==="recovery") choRange = [0,30];
+      else if(cat==="endurance") choRange = (mins>=90 ? [40,60] : [30,50]);
+      else if(cat==="tempo") choRange = [60,80];
+      else if(cat==="threshold" || cat==="vo2") choRange = [70,90];
+      else choRange = [30,60];
+
+      const lo = choRange[0], hi = choRange[1];
+      const mid = Math.round((lo+hi)/2);
+      const tot = Math.round(mid*hours);
+      const roundHalf = (x)=>Math.round(x*2)/2;
+      const fmtHalf = (x)=>Number.isInteger(x) ? String(x) : x.toFixed(1).replace(/\.0$/,"");
+
+      plain("");
+      plain("NUTRIZIONE");
+
+      if(hi <= 0 || (cat==="recovery" && mins <= 45)){
+        bullet("Carbo: opzionali (acqua + elettroliti).");
+      }else{
+        bullet("Carbo: " + lo + "–" + hi + " g/ora (≈ " + tot + " g totali).");
+        if(unitCho > 0){
+          const perH = roundHalf(mid/unitCho);
+          if(perH >= 0.5) bullet("Se snack ≈ " + unitCho + "g CHO: ~" + fmtHalf(perH) + " snack/ora.");
+        }
+      }
+
+      const fluid = isIndoor ? [600,900] : (isRunSport ? [300,600] : [500,750]);
+      bullet("Idratazione: " + fluid[0] + "–" + fluid[1] + " ml/ora.");
+      if(isIndoor) bullet("Indoor: ventilatore + asciugamano (sudorazione alta).");
+      bullet("Post: 25–35 g proteine + carbo (soprattutto se qualità).");
+    }
+
     // Blocks (indoor structured, outdoor steady)
     bullet("Riscaldamento " + wu + "′ — " + intStr(1));
+
+    const painTxt = (injPain!=null && injPain>0)
+      ? ("infortunio " + injPain + "/10" + (injArea ? " (" + injArea + ")" : ""))
+      : "";
+
+    if(rd && rd.runBlock){
+      bullet("Nota: " + painTxt + " — evita corsa oggi. Alternativa: bici Z1/Z2 30–60′.");
+    }else if(rd && rd.bikeBlock){
+      bullet("Nota: " + painTxt + " — evita intensità. Oggi solo Z1/Z2.");
+    }else if(injPain!=null && injPain>0){
+      bullet("Nota: " + painTxt + " — monitora (stop se peggiora).");
+    }
+
+    if(sport==="bike_outdoor"){
+      const metric = hasPower ? "Lap Avg Power" : "Lap Avg HR";
+      if(cat==="endurance"){
+        bullet("Tip outdoor: scegli percorso scorrevole o una salita lunga; evita stop. Usa " + metric + " per tenere costante.");
+      }else if(cat==="tempo" || cat==="threshold"){
+        bullet("Tip outdoor: usa LAP per ogni blocco; guarda durata + " + metric + ". Se stop/traffico, riparti e completa i minuti previsti.");
+      }
+    }
 
 if(cat==="recovery"){
   bullet("Facile " + main + "′ — " + intStr(1));
   bullet("Defaticamento " + cd + "′ — " + intStr(1));
+  appendNutrition();
   return pack();
 }
 
@@ -1075,6 +1489,7 @@ const picked = applyVariant(cat, sport, main, bullet, intStr, didQualityYesterda
     if(picked && picked.name) variantName = picked.name;
 
 bullet("Defaticamento " + cd + "′ — " + intStr(1));
+appendNutrition();
 return pack();
 
   }
@@ -1134,13 +1549,24 @@ return pack();
       durationMin,
       ftp,
       hrMax,
-      hrRest
+      hrRest,
+      sleepH: n(els.sleepH.value),
+      sleepScore: n(els.sleepScore.value),
+      hrv: n(els.hrv.value),
+      hrv7: n(els.hrv7.value),
+      rhr: n(els.rhr.value),
+      legs: n(els.legs.value),
+      injPain: n(els.injPain.value),
+      injArea: (els.injArea.value || "").trim(),
+      injImpact: (els.injImpact.value || "auto").trim(),
+      snackCho: n(els.snackCho.value)
     });
 
     els.outText.textContent = w.text;
     els.outMeta.textContent = w.meta;
     els.stateBadge.textContent = w.badge.text;
     els.stateBadge.className = "badge " + (w.badge.cls || "");
+    setReadinessUI(w.readiness);
     els.copyBtn.disabled = false;
     save();
     toast("Allenamento generato");
@@ -1161,6 +1587,18 @@ return pack();
     els.hrRestBike.value = "";
     els.hrMaxRun.value = "";
     els.hrRestRun.value = "";
+
+    // check-in
+    els.sleepH.value = "";
+    els.sleepScore.value = "";
+    els.hrv.value = "";
+    els.hrv7.value = "";
+    els.rhr.value = "";
+    els.legs.value = "";
+    els.injPain.value = "";
+    els.injArea.value = "";
+    els.injImpact.value = "auto";
+    els.snackCho.value = "20.6";
 
     els.ctl.value = "";
     els.atl.value = "";
@@ -1185,9 +1623,12 @@ return pack();
     els.outMeta.textContent = "—";
     els.stateBadge.textContent = "—";
     els.stateBadge.className = "badge";
+    setReadinessUI(null);
     els.copyBtn.disabled = true;
 
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    try{ STORAGE_KEYS_MIGRATE.forEach(k=>localStorage.removeItem(k)); }catch(_){ }
+    try{ localStorage.removeItem(WORKOUT_KEY_LAST); }catch(_){ }
     toast("Reset");
   }
 
@@ -1252,9 +1693,15 @@ return pack();
   els.powChk.addEventListener('change', syncPower);
   els.qualChk.addEventListener('change', syncQuality);
 
-  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","ctl","atl","tsb","ramp"].forEach(id=>{
+  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","sleepH","sleepScore","hrv","hrv7","rhr","legs","injPain","injArea","snackCho","ctl","atl","tsb","ramp"].forEach(id=>{
     $(id).addEventListener('input', save, {passive:true});
   });
+
+  // select needs change event
+  els.injImpact.addEventListener('change', save, {passive:true});
+
+  // show/hide injury extra fields
+  els.injPain.addEventListener('input', updateInjuryUI, {passive:true});
 
   // ± per valori negativi (iOS: tastierino numerico senza tasto meno)
   document.querySelectorAll('.signBtn').forEach(btn=>{
@@ -1285,6 +1732,9 @@ return pack();
   setSwitch(els.qualSwitch, state.didQualityYesterday);
   updateDurQuick();
   updateVisibility();
+  if(!els.snackCho.value) els.snackCho.value = "20.6";
+  updateInjuryUI();
+  setReadinessUI(null);
   if(!els.dur.value){
     const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
     els.dur.value = d0;

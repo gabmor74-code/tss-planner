@@ -1,3 +1,12 @@
+v8.10.0
+- Check-in: "Infortunio" generico (0-10) al posto di "Caviglia" + campo "Dove?" + "Impatto" (Auto/Corsa/Bici/Entrambi).
+- Output: semaforo Readiness (VERDE/GIALLO/ROSSO) con tooltip motivazioni.
+- Output: box "NUTRIZIONE" (carbo g/ora, idratazione, post). Calcolo "snack/ora" con CHO configurabile (default 20.6g).
+- Bici outdoor: aggiunti tip pratici per gestire i blocchi (LAP, Lap Avg Power/HR, stop/traffico).
+- Fix UI: ripristinate variabili CSS (palette coerente su Safari/iPhone).
+- Storage: nuova chiave localStorage (migrazione automatica dalla vecchia).
+- PWA: cache service worker aggiornata.
+
 v8.9.5
 - FIX critico: ripristinati selettori Sport / Misuratore di potenza / Ieri qualità (errore JS bloccante nelle versioni 8.9.2–8.9.3).
 - Medio > Progressivo (Bici outdoor): ora è davvero progressivo (Z2 → Z3), non due blocchi identici.
