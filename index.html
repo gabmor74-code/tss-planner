@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.10.2</div>
+          <div class="sub">Planner only · v8.10.3</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -1439,6 +1439,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     }
 
     // Blocks (indoor structured, outdoor steady)
+    const advice = [];
     bullet("Riscaldamento " + wu + "′ — " + intStr(1));
 
     const painTxt = (injPain!=null && injPain>0)
@@ -1446,26 +1447,34 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       : "";
 
     if(rd && rd.runBlock){
-      bullet("Nota: " + painTxt + " — evita corsa oggi. Alternativa: bici Z1/Z2 30–60′.");
+      advice.push("Infortunio: " + painTxt + " — evita corsa oggi. Alternativa: bici Z1/Z2 30–60′.");
     }else if(rd && rd.bikeBlock){
-      bullet("Nota: " + painTxt + " — evita intensità. Oggi solo Z1/Z2.");
+      advice.push("Infortunio: " + painTxt + " — evita intensità. Oggi solo Z1/Z2.");
     }else if(injPain!=null && injPain>0){
-      bullet("Nota: " + painTxt + " — monitora (stop se peggiora).");
+      advice.push("Infortunio: " + painTxt + " — monitora (stop se peggiora).");
     }
 
-    if(sport==="bike_outdoor"){
+    if(sport==="bike_outdoor"){ 
       const metric = hasPower ? "Lap Avg Power" : "Lap Avg HR";
       if(cat==="endurance"){
-        bullet("Tip outdoor: scegli percorso scorrevole o una salita lunga; evita stop. Usa " + metric + " per tenere costante.");
+        advice.push("Outdoor: scegli percorso scorrevole o una salita lunga; evita stop. Usa " + metric + " per tenere costante.");
       }else if(cat==="tempo" || cat==="threshold"){
-        bullet("Tip outdoor: usa LAP per ogni blocco; guarda durata + " + metric + ". Se stop/traffico, riparti e completa i minuti previsti.");
+        advice.push("Outdoor: usa LAP per ogni blocco; guarda durata + " + metric + ". Se stop/traffico, riparti e completa i minuti previsti.");
       }
+    }
+
+    function appendAdvice(){
+      if(!advice.length) return;
+      plain("");
+      plain("CONSIGLI");
+      advice.forEach(s=>bullet(s));
     }
 
 if(cat==="recovery"){
   bullet("Facile " + main + "′ — " + intStr(1));
   bullet("Defaticamento " + cd + "′ — " + intStr(1));
   appendNutrition();
+  appendAdvice();
   return pack();
 }
 
@@ -1475,6 +1484,7 @@ const picked = applyVariant(cat, sport, main, bullet, intStr, didQualityYesterda
 
 bullet("Defaticamento " + cd + "′ — " + intStr(1));
 appendNutrition();
+appendAdvice();
 return pack();
 
   }

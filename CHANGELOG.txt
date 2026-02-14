@@ -1,3 +1,6 @@
+v8.10.3
+- Output: spostate Note infortunio e Tip outdoor in fondo, sezione "CONSIGLI", per non confonderle con i blocchi allenamento.
+
 v8.10.2
 - UI: rinominato "Impatto" in "Tipo di attività" (Auto/Corsa/Bici/Entrambi).
 - UI: rimosso input "Integratori carbo (g CHO per unità)".
