@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.10.1</div>
+          <div class="sub">Planner only · v8.10.2</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -559,14 +559,10 @@
           <label>Infortunio / dolore (0-10)
             <input inputmode="numeric" type="number" step="1" min="0" max="10" id="injPain" placeholder="0-10" />
           </label>
-          <label>Integratori carbo (g CHO per unità)
-            <input inputmode="decimal" type="number" step="0.1" min="0" id="snackCho" placeholder="es. 20.6" />
-          </label>
-
           <label id="injAreaWrap" style="display:none">Dove?
             <input type="text" id="injArea" placeholder="es. caviglia sx, ginocchio, schiena" />
           </label>
-          <label id="injImpactWrap" style="display:none">Impatto
+          <label id="injImpactWrap" style="display:none">Tipo di attività
             <select id="injImpact">
               <option value="auto">Auto (sport di oggi)</option>
               <option value="run">Solo corsa</option>
@@ -659,7 +655,6 @@
     injAreaWrap: $("injAreaWrap"),
     injImpact: $("injImpact"),
     injImpactWrap: $("injImpactWrap"),
-    snackCho: $("snackCho"),
 
     genBtn: $("genBtn"), copyBtn: $("copyBtn"), resetBtn: $("resetBtn"),
     outText: $("outText"), outMeta: $("outMeta"), stateBadge: $("stateBadge"),
@@ -960,7 +955,6 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       injPain: els.injPain.value,
       injArea: els.injArea.value,
       injImpact: els.injImpact.value,
-      snackCho: els.snackCho.value,
       ctl: els.ctl.value, atl: els.atl.value, tsb: els.tsb.value, ramp: els.ramp.value
     };
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }catch(e){}
@@ -1008,8 +1002,6 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       if(p.injArea!=null) els.injArea.value = p.injArea;
       if((p.injArea==null || p.injArea==="") && p.ankle!=null) els.injArea.value = "caviglia";
       if(p.injImpact!=null) els.injImpact.value = p.injImpact;
-      if(p.snackCho!=null) els.snackCho.value = p.snackCho;
-      if(!els.snackCho.value) els.snackCho.value = "20.6";
 
       if(migrated){
         try{ localStorage.removeItem(STORAGE_KEYS_MIGRATE[0]); }catch(_){ }
@@ -1230,8 +1222,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       ftp,
       hrMax, hrRest,
       sleepH, sleepScore, hrv, hrv7, rhr, legs,
-      injPain, injArea, injImpact,
-      snackCho
+      injPain, injArea, injImpact
     } = opts;
 
     const tsbUsed = calcTSB(ctl, atl, tsb);
@@ -1416,7 +1407,6 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
     function appendNutrition(){
       if(cat==="off") return;
-      const unitCho = (snackCho!=null && snackCho>0) ? snackCho : 20.6;
       const hours = mins/60;
       const isIndoor = (sport==="bike_indoor");
       const isRunSport = (sport==="run");
@@ -1431,8 +1421,6 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       const lo = choRange[0], hi = choRange[1];
       const mid = Math.round((lo+hi)/2);
       const tot = Math.round(mid*hours);
-      const roundHalf = (x)=>Math.round(x*2)/2;
-      const fmtHalf = (x)=>Number.isInteger(x) ? String(x) : x.toFixed(1).replace(/\.0$/,"");
 
       plain("");
       plain("NUTRIZIONE");
@@ -1440,11 +1428,8 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       if(hi <= 0 || (cat==="recovery" && mins <= 45)){
         bullet("Carbo: opzionali (acqua + elettroliti).");
       }else{
-        bullet("Carbo: " + lo + "–" + hi + " g/ora (≈ " + tot + " g totali).");
-        if(unitCho > 0){
-          const perH = roundHalf(mid/unitCho);
-          if(perH >= 0.5) bullet("Se 1 unità ≈ " + unitCho + "g CHO: ~" + fmtHalf(perH) + " unità/ora.");
-        }
+        bullet("Carbo: " + lo + "–" + hi + " g/ora.");
+        bullet("Totale: " + Math.round(lo*hours) + "–" + Math.round(hi*hours) + " g (su " + mins + "′).");
       }
 
       const fluid = isIndoor ? [600,900] : (isRunSport ? [300,600] : [500,750]);
@@ -1558,8 +1543,7 @@ return pack();
       legs: n(els.legs.value),
       injPain: n(els.injPain.value),
       injArea: (els.injArea.value || "").trim(),
-      injImpact: (els.injImpact.value || "auto").trim(),
-      snackCho: n(els.snackCho.value)
+      injImpact: (els.injImpact.value || "auto").trim()
     });
 
     els.outText.textContent = w.text;
@@ -1598,7 +1582,6 @@ return pack();
     els.injPain.value = "";
     els.injArea.value = "";
     els.injImpact.value = "auto";
-    els.snackCho.value = "20.6";
 
     els.ctl.value = "";
     els.atl.value = "";
@@ -1693,7 +1676,7 @@ return pack();
   els.powChk.addEventListener('change', syncPower);
   els.qualChk.addEventListener('change', syncQuality);
 
-  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","sleepH","sleepScore","hrv","hrv7","rhr","legs","injPain","injArea","snackCho","ctl","atl","tsb","ramp"].forEach(id=>{
+  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","sleepH","sleepScore","hrv","hrv7","rhr","legs","injPain","injArea","ctl","atl","tsb","ramp"].forEach(id=>{
     $(id).addEventListener('input', save, {passive:true});
   });
 
@@ -1732,7 +1715,6 @@ return pack();
   setSwitch(els.qualSwitch, state.didQualityYesterday);
   updateDurQuick();
   updateVisibility();
-  if(!els.snackCho.value) els.snackCho.value = "20.6";
   updateInjuryUI();
   setReadinessUI(null);
   if(!els.dur.value){

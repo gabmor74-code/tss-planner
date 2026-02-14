@@ -1,3 +1,8 @@
+v8.10.2
+- UI: rinominato "Impatto" in "Tipo di attività" (Auto/Corsa/Bici/Entrambi).
+- UI: rimosso input "Integratori carbo (g CHO per unità)".
+- Output: nutrizione ora mostra CHO consigliati in g/ora + totale seduta (senza conversione in unità).
+
 v8.10.1
 - UI: allineato il campo "Integratori carbo" sulla stessa riga di "Infortunio / dolore".
 - UI: rinominato "Carbo snack" in "Integratori carbo (g CHO per unità)".
