@@ -1,5 +1,5 @@
-/* TSS Planner - planner only v8.10.0 */
-const CACHE = 'tss-planner-v8.10.0';
+/* TSS Planner - planner only v8.10.1 */
+const CACHE = 'tss-planner-v8.10.1';
 const ASSETS = [
   './',
   './index.html',

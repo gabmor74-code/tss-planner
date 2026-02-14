@@ -1,3 +1,8 @@
+v8.10.1
+- UI: allineato il campo "Integratori carbo" sulla stessa riga di "Infortunio / dolore".
+- UI: rinominato "Carbo snack" in "Integratori carbo (g CHO per unità)".
+- Output: rinominata la stima "snack/ora" in "unità/ora".
+
 v8.10.0
 - Check-in: "Infortunio" generico (0-10) al posto di "Caviglia" + campo "Dove?" + "Impatto" (Auto/Corsa/Bici/Entrambi).
 - Output: semaforo Readiness (VERDE/GIALLO/ROSSO) con tooltip motivazioni.

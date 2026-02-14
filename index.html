@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.10.0</div>
+          <div class="sub">Planner only · v8.10.1</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -535,7 +535,8 @@
               <button class="signBtn" type="button" data-sign="ramp" aria-label="Cambia segno RAMP">±</button>
             </div>
           </label>
-        
+        </div>
+
         <div class="grid" aria-label="Check-in (manuale)">
           <label>Sleep (h)
             <input inputmode="decimal" type="number" step="0.1" min="0" id="sleepH" placeholder="es. 7.5" />
@@ -558,6 +559,10 @@
           <label>Infortunio / dolore (0-10)
             <input inputmode="numeric" type="number" step="1" min="0" max="10" id="injPain" placeholder="0-10" />
           </label>
+          <label>Integratori carbo (g CHO per unità)
+            <input inputmode="decimal" type="number" step="0.1" min="0" id="snackCho" placeholder="es. 20.6" />
+          </label>
+
           <label id="injAreaWrap" style="display:none">Dove?
             <input type="text" id="injArea" placeholder="es. caviglia sx, ginocchio, schiena" />
           </label>
@@ -569,12 +574,7 @@
               <option value="both">Corsa + bici</option>
             </select>
           </label>
-          <label>Carbo snack (g)
-            <input inputmode="decimal" type="number" step="0.1" min="0" id="snackCho" placeholder="es. 20.6" />
-          </label>
         </div>
-
-</div>
 
         <div class="grid" aria-label="Opzioni">
           <div class="toggle" id="powWrap" aria-label="Misuratore di potenza">
@@ -1443,7 +1443,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
         bullet("Carbo: " + lo + "–" + hi + " g/ora (≈ " + tot + " g totali).");
         if(unitCho > 0){
           const perH = roundHalf(mid/unitCho);
-          if(perH >= 0.5) bullet("Se snack ≈ " + unitCho + "g CHO: ~" + fmtHalf(perH) + " snack/ora.");
+          if(perH >= 0.5) bullet("Se 1 unità ≈ " + unitCho + "g CHO: ~" + fmtHalf(perH) + " unità/ora.");
         }
       }
 
