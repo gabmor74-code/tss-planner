@@ -1,3 +1,15 @@
+v8.11.2
+- Added explicit "Categoria scelta" line in output so focus changes are visible.
+- Removed MEMO and CONSIGLI sections from generated workout text.
+- Outdoor generator now respects "Tratto utile (min)" strictly: block length never exceeds the useful segment.
+- Clarified logistic recovery behavior: descent/return-to-start can count as recovery; if pedaled, keep it easy with a cap.
+- Strengthened focus handling so FTP and VO2max produce distinct outdoor sessions when readiness allows.
+- Updated UI hint for Recupero logistico.
+
+v8.11.1
+- Fix: il focus VO2max outdoor ora cambia davvero la tipologia di seduta anche quando la base giornaliera cadeva su “Medio/Tempo”; nei giorni verdi può promuovere a VO2 outdoor.
+- Fix: allineata la logica focus→categoria per evitare output quasi identici con TSS diversi.
+
 v8.11.0
 - Metodo outdoor-aware: aggiunti Focus di oggi (FTP / VO2max / Generale), Umore / energia, Meteo, Avvicinamento, Tratto utile e toggle Recupero logistico.
 - Planner bici outdoor con logica LAP-first: genera workout semplici, memorizzabili e realistici (es. Salita FTP 3×8 / 3×10 / 2×15, VO2 outdoor 4–5×3′) invece di strutture rigide al secondo.

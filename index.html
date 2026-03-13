@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
-  <title>TSS Planner v8.11.0</title>
+  <title>TSS Planner v8.11.2</title>
   <style>
     :root{
       --bg:#0b0d10;
@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.11.0</div>
+          <div class="sub">Planner only · v8.11.2</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -508,7 +508,7 @@
           <div class="toggle" id="logRecWrap" aria-label="Recupero logistico">
             <div class="tlabel">
               <div class="name">Recupero logistico</div>
-              <div class="hint">Discesa / ritorno al punto di partenza</div>
+              <div class="hint">La discesa/ritorno valgono come recupero</div>
             </div>
             <label class="switchWrap" aria-label="Attiva recupero logistico">
               <input type="checkbox" id="logRecChk" />
@@ -719,7 +719,7 @@
   };
 
   // Storage
-  const STORAGE_KEY = "tss_planner_v8_11_state";
+  const STORAGE_KEY = "tss_planner_v8_11_2_state";
   const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_10_state", "tss_planner_v8_4_state"];
 
 
@@ -1350,11 +1350,18 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     }
 
     // Goal-first logic: FTP first, VO2 secondary.
+    // On fresh days, let the chosen focus materially change the session shape.
     if(isBikeSport && goalUsed==="ftp"){
       if(cat==="vo2") cat = "threshold";
       else if(cat==="tempo" && rd && rd.level==="green" && !didQualityYesterday) cat = "threshold";
     }else if(isBikeSport && goalUsed==="vo2"){
-      if(cat==="threshold" && rd && rd.level==="green" && !didQualityYesterday) cat = "vo2";
+      if(rd && rd.level==="green" && !didQualityYesterday){
+        if(cat==="threshold" || cat==="tempo") cat = "vo2";
+        else if(cat==="endurance" && tsbUsed!==null && tsbUsed>=5) cat = "vo2";
+      }
+      if(sport==="bike_outdoor" && rd && rd.level!=="red" && !didQualityYesterday && meteo!=="bad"){
+        if((usableMin===null || usableMin >= 3) && (tsbUsed===null || tsbUsed >= 0)) cat = "vo2";
+      }
     }
 
     if(sport==="bike_outdoor" && meteo==="bad" && ["vo2","threshold"].includes(cat)){
@@ -1429,8 +1436,9 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       const rsShort = rs.length ? (" (" + rs.slice(0,2).join(", ") + (rs.length>2 ? ", …" : "") + ")") : "";
       const metaCore = st.tag + (rdShort ? (" · Readiness " + rdShort + rsShort) : "");
       const meta = (variantName ? (metaCore + " · " + variantName) : metaCore);
+      const catLine = "Categoria scelta: " + badge.text + (variantName ? (" · " + variantName) : "");
       return {
-        text: head.join(" · ") + "\n\n" + lines.join("\n"),
+        text: head.join(" · ") + "\n" + catLine + "\n\n" + lines.join("\n"),
         meta,
         badge,
         readiness: rd || null,
@@ -1549,28 +1557,43 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       let name = "";
 
       if(cat==="vo2"){
-        work = (usable >= 4) ? 3 : 2;
+        if(usable >= 4) work = 3;
+        else work = 2;
         reps = (mins >= 65 ? 5 : 4);
         target = wattRangeText(ftp*1.14, 4, 8);
         cap = round5(ftp*1.20);
         name = "VO2 outdoor " + reps + "×" + work + "′";
         recTxt = logisticRecovery
-          ? ("Recupero libero/logistico — se pedalato facile, " + "cap " + easyCap + " W")
+          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
           : ("Rec 3′ facile — cap " + easyCap + " W");
-      }else{
-        if(usable >= 14 && mins >= 60){ work = 15; reps = 2; }
-        else if(usable >= 9 && mins >= 55){ work = 10; reps = 3; }
-        else if(usable >= 7){ work = 8; reps = 3; }
-        else { work = 6; reps = 4; }
+      }else if(cat==="threshold"){
+        if(usable >= 15 && mins >= 60){ work = 15; reps = 2; }
+        else if(usable >= 10 && mins >= 55){ work = 10; reps = 3; }
+        else if(usable >= 8){ work = 8; reps = 3; }
+        else if(usable >= 6){ work = 6; reps = 4; }
+        else { work = Math.max(3, usable); reps = 4; }
 
         if(work >= 15) target = wattRangeText(ftp*0.99, 5, 5);
         else if(work >= 10) target = wattRangeText(ftp*0.985, 5, 7);
-        else target = wattRangeText(ftp*0.98, 5, 8);
+        else if(work >= 8) target = wattRangeText(ftp*0.98, 5, 8);
+        else target = wattRangeText(ftp*0.975, 5, 8);
 
         name = "Salita FTP " + reps + "×" + work + "′";
         recTxt = logisticRecovery
-          ? ("Recupero libero/logistico — se pedalato facile, cap " + easyCap + " W")
+          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
           : ("Rec " + (work >= 10 ? 5 : 4) + "–5′ facile — cap " + easyCap + " W");
+      }else{
+        if(usable >= 10 && mins >= 55){ work = 10; reps = 3; }
+        else if(usable >= 8){ work = 8; reps = 3; }
+        else if(usable >= 6){ work = 6; reps = 4; }
+        else { work = Math.max(3, usable); reps = 4; }
+
+        target = wattRangeText(ftp*0.90, 5, 8);
+        cap = round5(Math.min(ftp*0.95, ftp+2));
+        name = "Salita Tempo " + reps + "×" + work + "′";
+        recTxt = logisticRecovery
+          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
+          : ("Rec 4′ facile — cap " + easyCap + " W");
       }
 
       bullet("Avvicinamento " + approach + "′ — " + wattsText(z2Lo, z2Hi));
@@ -1579,13 +1602,6 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
         if(i<reps) bullet(recTxt);
       }
       bullet("Rientro Z2 facile " + cd + "–15′ — " + wattsText(backLo, backHi));
-
-      plain("");
-      plain("MEMO");
-      bullet("Usa LAP: fallo partire solo quando inizia il tratto buono.");
-      bullet("Guarda Lap Avg Power: precisione sul blocco, non sul secondo.");
-      if(logisticRecovery) bullet("Recupero logistico ammesso: discesa/ritorno sotto salita valgono come recupero.");
-      bullet("Se traffico o stop durante un blocco, allunga per avere minuti buoni.");
       return {name};
     }
 
@@ -1615,10 +1631,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     }
 
     function appendAdvice(){
-      if(!advice.length) return;
-      plain("");
-      plain("CONSIGLI");
-      advice.forEach(s=>bullet(s));
+      return;
     }
 
 if(cat==="recovery"){
