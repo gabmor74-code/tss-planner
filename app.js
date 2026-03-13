@@ -53,7 +53,7 @@
   };
 
   // Storage
-  const STORAGE_KEY = "tss_planner_v8_12_0_state";
+  const STORAGE_KEY = "tss_planner_v8_12_1_state";
   const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_11_3_state", "tss_planner_v8_10_state", "tss_planner_v8_4_state"];
 
 
@@ -1013,27 +1013,31 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
         finalZ2: finalOnly
       });
 
-      if(reps >= 2 && remaining >= (minBack + 12)){
+      if(reps >= 2){
         const slots = Math.max(1, reps - 1);
-        const spread = Math.min(remaining - minBack, slots * 10);
-        const perSlot = Math.max(0, Math.floor(spread / slots / 5) * 5);
-        const between = Array(slots).fill(perSlot);
-        const usedBetween = between.reduce((a,b)=>a+b,0);
-        const finalZ2 = remaining - usedBetween;
+        let between = Array(slots).fill(0);
+        let usedBetween = 0;
+        let finalZ2 = remaining;
+
+        if(remaining > 0){
+          if(remaining >= slots){
+            let units = Math.round(remaining);
+            let base = Math.floor(units / (slots + 1));
+            let rest = units - base * (slots + 1);
+            between = Array(slots).fill(base);
+            for(let i=0; i<slots && rest>0; i++, rest--) between[i] += 1;
+            finalZ2 = base + rest;
+          }else{
+            finalZ2 = remaining;
+          }
+          usedBetween = between.reduce((a,b)=>a+b,0);
+          finalZ2 = Math.max(0, remaining - usedBetween);
+        }
+
         emitStandardOption("Scelta B · Distribuisci la Z2 tra i blocchi", {
           reps, work, recMin, target, cap,
           betweenZ2: between,
           finalZ2
-        });
-      }
-
-      if(reps > 1){
-        const repsC = Math.max(1, reps - 1);
-        const extraC = Math.max(0, mins - approach - nominalQuality(repsC));
-        emitStandardOption("Scelta C · Più equilibrata / meno qualità", {
-          reps: repsC, work, recMin, target, cap,
-          betweenZ2: [],
-          finalZ2: extraC
         });
       }
       return {name: variantName};

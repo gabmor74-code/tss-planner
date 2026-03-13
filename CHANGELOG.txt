@@ -106,3 +106,5 @@ TSS Planner – v8.2 (planner only)
 - v8.12.0: aggiunto focus Sprint (suggerito solo con readiness verde, no qualità ieri, durata <=60′ e non più di una proposta ogni 14 giorni, basata sulla cronologia interna dell'app).
 - v8.12.0: planner outdoor con 2–3 scelte: A) allunga tutto in fondo, B) distribuisce la Z2 tra i blocchi, C) più equilibrata / meno qualità.
 - v8.12.0: il tempo totale outdoor torna in modo coerente nelle varianti; la durata extra non finisce più solo in fondo per forza.
+
+- v8.12.1: per focus FTP e VO2max outdoor restano solo 2 scelte concrete di lavoro: A) extra Z2/completamento in fondo, B) stessa qualità con extra Z2 distribuita tra i blocchi; rimossa la scelta C "meno qualità".
