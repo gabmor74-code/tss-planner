@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.12.1</div>
+          <div class="sub">Planner only · v8.12.2</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -712,8 +712,8 @@
   };
 
   // Storage
-  const STORAGE_KEY = "tss_planner_v8_12_1_state";
-  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_11_3_state", "tss_planner_v8_10_state", "tss_planner_v8_4_state"];
+  const STORAGE_KEY = "tss_planner_v8_12_2_state";
+  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_12_1_state", "tss_planner_v8_11_3_state", "tss_planner_v8_10_state", "tss_planner_v8_4_state"];
 
 
 // Workout library (controlled variability)
@@ -1686,15 +1686,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
         });
       }
 
-      if(reps > 1){
-        const repsC = Math.max(1, reps - 1);
-        const extraC = Math.max(0, mins - approach - nominalQuality(repsC));
-        emitStandardOption("Scelta C · Più equilibrata / meno qualità", {
-          reps: repsC, work, recMin, target, cap,
-          betweenZ2: [],
-          finalZ2: extraC
-        });
-      }
+
       return {name: variantName};
     }
 

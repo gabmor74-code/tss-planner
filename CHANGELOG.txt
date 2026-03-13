@@ -108,3 +108,5 @@ TSS Planner – v8.2 (planner only)
 - v8.12.0: il tempo totale outdoor torna in modo coerente nelle varianti; la durata extra non finisce più solo in fondo per forza.
 
 - v8.12.1: per focus FTP e VO2max outdoor restano solo 2 scelte concrete di lavoro: A) extra Z2/completamento in fondo, B) stessa qualità con extra Z2 distribuita tra i blocchi; rimossa la scelta C "meno qualità".
+
+- v8.12.2: rimossa davvero la Scelta C per focus FTP/VO2 outdoor; restano solo due varianti concrete di lavoro (A in fondo, B distribuita).

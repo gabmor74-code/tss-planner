@@ -53,8 +53,8 @@
   };
 
   // Storage
-  const STORAGE_KEY = "tss_planner_v8_12_1_state";
-  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_11_3_state", "tss_planner_v8_10_state", "tss_planner_v8_4_state"];
+  const STORAGE_KEY = "tss_planner_v8_12_2_state";
+  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_12_1_state", "tss_planner_v8_11_3_state", "tss_planner_v8_10_state", "tss_planner_v8_4_state"];
 
 
 // Workout library (controlled variability)
