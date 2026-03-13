@@ -901,13 +901,16 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       function optionHeader(title){
         plain("");
         plain(title);
+        plain("");
       }
       function fmtMin(val){
         const x = Math.round(val*10)/10;
         return Number.isInteger(x) ? String(x) : x.toFixed(1);
       }
       function optionFooter(total, approachM, qualityM, recM, z2M){
-        plain("Tempo stimato: " + fmtMin(total) + "′ (avvicinamento " + fmtMin(approachM) + "′ + qualità " + fmtMin(qualityM) + "′ + recuperi " + fmtMin(recM) + "′ + Z2 " + fmtMin(z2M) + "′)");
+        plain("");
+        plain("Tempo stimato · " + fmtMin(total) + "′");
+        plain("  avvicinamento " + fmtMin(approachM) + "′ + qualità " + fmtMin(qualityM) + "′ + recuperi " + fmtMin(recM) + "′ + Z2 " + fmtMin(z2M) + "′");
       }
       function recLine(recMin){
         return logisticRecovery
@@ -917,6 +920,8 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
       function emitStandardOption(label, cfg){
         optionHeader(label);
+        plain("Schema · " + cfg.reps + "×" + cfg.work + "′ @ " + wattsText(cfg.target.lo, cfg.target.hi) + " · rec " + cfg.recMin + "′");
+        plain("");
         bullet("Avvicinamento " + approach + "′ — " + wattsText(z2Lo, z2Hi));
         let z2Used = 0;
         let recUsed = 0;

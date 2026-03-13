@@ -227,7 +227,8 @@
     }
 
     .toggle{
-      display:flex;
+      display:grid;
+      grid-template-columns: minmax(0,1fr) auto;
       align-items:center;
       gap: 10px;
       border-radius: 14px;
@@ -236,7 +237,6 @@
       background: #141419;
       user-select:none;
       width: 100%;
-      justify-content:space-between;
     }
     .toggle .tlabel{
       display:flex;
@@ -247,16 +247,18 @@
     .toggle .tlabel .name{
       font-size: 14px;
       color: var(--text);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+      line-height:1.25;
     }
     .toggle .tlabel .hint{
       font-size: 12px;
       color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+      line-height:1.25;
     }
     .switch{
       width: 50px;
@@ -304,6 +306,25 @@
     .switch.on::after{
       transform: translateX(20px);
       background: rgba(69,226,122,.95);
+    }
+
+
+    @media (max-width: 480px){
+      .toggle{
+        gap: 8px;
+        padding: 10px;
+      }
+      .switch, .switchWrap{
+        width: 46px;
+        height: 28px;
+      }
+      .switch::after{
+        width: 22px;
+        height: 22px;
+      }
+      .switch.on::after{
+        transform: translateX(18px);
+      }
     }
 
     .actions{
@@ -1560,13 +1581,16 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       function optionHeader(title){
         plain("");
         plain(title);
+        plain("");
       }
       function fmtMin(val){
         const x = Math.round(val*10)/10;
         return Number.isInteger(x) ? String(x) : x.toFixed(1);
       }
       function optionFooter(total, approachM, qualityM, recM, z2M){
-        plain("Tempo stimato: " + fmtMin(total) + "′ (avvicinamento " + fmtMin(approachM) + "′ + qualità " + fmtMin(qualityM) + "′ + recuperi " + fmtMin(recM) + "′ + Z2 " + fmtMin(z2M) + "′)");
+        plain("");
+        plain("Tempo stimato · " + fmtMin(total) + "′");
+        plain("  avvicinamento " + fmtMin(approachM) + "′ + qualità " + fmtMin(qualityM) + "′ + recuperi " + fmtMin(recM) + "′ + Z2 " + fmtMin(z2M) + "′");
       }
       function recLine(recMin){
         return logisticRecovery
@@ -1576,6 +1600,8 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
       function emitStandardOption(label, cfg){
         optionHeader(label);
+        plain("Schema · " + cfg.reps + "×" + cfg.work + "′ @ " + wattsText(cfg.target.lo, cfg.target.hi) + " · rec " + cfg.recMin + "′");
+        plain("");
         bullet("Avvicinamento " + approach + "′ — " + wattsText(z2Lo, z2Hi));
         let z2Used = 0;
         let recUsed = 0;
