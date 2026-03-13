@@ -1,3 +1,8 @@
+v8.11.3
+- Outdoor: il campo Avvicinamento (min) ora aggiorna davvero la seduta generata.
+- Outdoor: Avvicinamento sostituisce il vecchio riscaldamento separato, evitando doppioni.
+- UI/logic: mantenuta la compatibilita con Tratto utile e recupero logistico.
+
 v8.11.2
 - Added explicit "Categoria scelta" line in output so focus changes are visible.
 - Removed MEMO and CONSIGLI sections from generated workout text.
