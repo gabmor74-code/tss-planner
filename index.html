@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
-  <title>TSS Planner</title>
+  <title>TSS Planner v8.11.0</title>
   <style>
     :root{
       --bg:#0b0d10;
@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.10.3</div>
+          <div class="sub">Planner only · v8.11.0</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -487,9 +487,35 @@
           <label>Durata (min)
             <input inputmode="numeric" type="number" step="5" min="20" id="dur" placeholder="es. 60" />
           </label>
+          <label>Focus di oggi
+            <select id="goal">
+              <option value="ftp">FTP</option>
+              <option value="vo2">VO2max</option>
+              <option value="general">Generale</option>
+            </select>
+          </label>
         </div>
 
         <div class="quick" id="durQuick" aria-label="Scelte rapide durata"></div>
+
+        <div class="grid" id="outdoorGrid" aria-label="Metodo outdoor" style="display:none">
+          <label>Avvicinamento (min)
+            <input inputmode="numeric" type="number" step="1" min="0" id="approachMin" placeholder="es. 10" />
+          </label>
+          <label>Tratto utile (min)
+            <input inputmode="numeric" type="number" step="1" min="3" id="usableMin" placeholder="es. 8 / 10 / 15" />
+          </label>
+          <div class="toggle" id="logRecWrap" aria-label="Recupero logistico">
+            <div class="tlabel">
+              <div class="name">Recupero logistico</div>
+              <div class="hint">Discesa / ritorno al punto di partenza</div>
+            </div>
+            <label class="switchWrap" aria-label="Attiva recupero logistico">
+              <input type="checkbox" id="logRecChk" />
+              <span class="switch" id="logRecSwitch" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
 
         <div class="grid" id="ftpGrid" aria-label="Potenza" style="display:none">
           <label>FTP (W)
@@ -555,6 +581,16 @@
           </label>
           <label>Gambe (1-5)
             <input inputmode="numeric" type="number" step="1" min="1" max="5" id="legs" placeholder="1-5" />
+          </label>
+          <label>Umore / energia (1-5)
+            <input inputmode="numeric" type="number" step="1" min="1" max="5" id="mood" placeholder="1-5" />
+          </label>
+          <label>Meteo
+            <select id="meteo">
+              <option value="ok">Ok</option>
+              <option value="mixed">Incerto / vento</option>
+              <option value="bad">Brutto / pioggia</option>
+            </select>
           </label>
           <label>Infortunio / dolore (0-10)
             <input inputmode="numeric" type="number" step="1" min="0" max="10" id="injPain" placeholder="0-10" />
@@ -650,6 +686,15 @@
     hrv7: $("hrv7"),
     rhr: $("rhr"),
     legs: $("legs"),
+    mood: $("mood"),
+    meteo: $("meteo"),
+    goal: $("goal"),
+    outdoorGrid: $("outdoorGrid"),
+    approachMin: $("approachMin"),
+    usableMin: $("usableMin"),
+    logRecWrap: $("logRecWrap"),
+    logRecSwitch: $("logRecSwitch"),
+    logRecChk: $("logRecChk"),
     injPain: $("injPain"),
     injArea: $("injArea"),
     injAreaWrap: $("injAreaWrap"),
@@ -670,11 +715,12 @@
     sport: "bike_indoor",
     hasPower: false,
     didQualityYesterday: false,
+    logisticRecovery: false,
   };
 
   // Storage
-  const STORAGE_KEY = "tss_planner_v8_10_state";
-  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_4_state"];
+  const STORAGE_KEY = "tss_planner_v8_11_state";
+  const STORAGE_KEYS_MIGRATE = ["tss_planner_v8_10_state", "tss_planner_v8_4_state"];
 
 
 // Workout library (controlled variability)
@@ -839,6 +885,14 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     const x = Number(s);
     return Number.isFinite(x) ? x : null;
   }
+  function round5(x){ return Math.round(x/5)*5; }
+  function wattsText(lo, hi){
+    return lo===hi ? (lo + " W") : (lo + "–" + hi + " W");
+  }
+  function wattRangeText(center, spreadLo, spreadHi){
+    const c = round5(center);
+    return { center:c, lo: round5(center-spreadLo), hi: round5(center+spreadHi) };
+  }
 
   function setSwitch(el, on){
     el.classList.toggle("on", !!on);
@@ -847,7 +901,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
   function updateDurQuick(){
     const s = state.sport;
     const presets = (s==="bike_indoor") ? [45,60,75,90]
-                  : (s==="bike_outdoor") ? [90,120,150,180]
+                  : (s==="bike_outdoor") ? [60,75,90,120,150]
                   : [30,40,50,60,75];
     els.durQuick.innerHTML = "";
     presets.forEach(v=>{
@@ -868,10 +922,12 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     const s = state.sport;
     const isBike = (s==="bike_indoor" || s==="bike_outdoor");
     const isRun = (s==="run");
+    const isOutdoor = (s==="bike_outdoor");
     // power / ftp only for bike
     els.ftpGrid.style.display = (isBike && state.hasPower) ? "" : "none";
     els.hrGridBike.style.display = (isBike && !state.hasPower) ? "" : "none";
     els.hrGridRun.style.display = isRun ? "" : "none";
+    if(els.outdoorGrid) els.outdoorGrid.style.display = isOutdoor ? "" : "none";
   }
 
   function updateInjuryUI(){
@@ -952,6 +1008,12 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       hrv7: els.hrv7.value,
       rhr: els.rhr.value,
       legs: els.legs.value,
+      mood: els.mood.value,
+      meteo: els.meteo.value,
+      goal: els.goal.value,
+      approachMin: els.approachMin.value,
+      usableMin: els.usableMin.value,
+      logisticRecovery: state.logisticRecovery,
       injPain: els.injPain.value,
       injArea: els.injArea.value,
       injImpact: els.injImpact.value,
@@ -996,6 +1058,14 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       if(p.hrv7!=null) els.hrv7.value = p.hrv7;
       if(p.rhr!=null) els.rhr.value = p.rhr;
       if(p.legs!=null) els.legs.value = p.legs;
+      if(p.mood!=null) els.mood.value = p.mood;
+      if(p.meteo!=null) els.meteo.value = p.meteo;
+      if(p.goal!=null) els.goal.value = p.goal;
+      if(p.approachMin!=null) els.approachMin.value = p.approachMin;
+      if(p.usableMin!=null) els.usableMin.value = p.usableMin;
+      state.logisticRecovery = !!p.logisticRecovery;
+      if(els.logRecChk) els.logRecChk.checked = state.logisticRecovery;
+      if(els.logRecSwitch) setSwitch(els.logRecSwitch, state.logisticRecovery);
       // Injury (new) + legacy migration from "ankle"
       if(p.injPain!=null) els.injPain.value = p.injPain;
       if((p.injPain==null || p.injPain==="") && p.ankle!=null) els.injPain.value = p.ankle;
@@ -1042,6 +1112,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     hrv, hrv7,
     rhr, rhrBase,
     legs,
+    mood,
     injuryPain, injuryArea, injuryImpact,
     sport,
     tsb
@@ -1083,6 +1154,12 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     if(legs!=null){
       if(legs >= 4){ bump("red"); reasons.push("gambe " + legs + "/5"); }
       else if(legs === 3){ bump("yellow"); reasons.push("gambe 3/5"); }
+    }
+
+    // Mood / energia
+    if(mood!=null){
+      if(mood <= 1){ bump("red"); reasons.push("umore 1/5"); }
+      else if(mood === 2){ bump("yellow"); reasons.push("umore 2/5"); }
     }
 
     // Guardrail from TSB (if provided)
@@ -1221,7 +1298,8 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       durationMin,
       ftp,
       hrMax, hrRest,
-      sleepH, sleepScore, hrv, hrv7, rhr, legs,
+      sleepH, sleepScore, hrv, hrv7, rhr, legs, mood,
+      goal, meteo, approachMin, usableMin, logisticRecovery,
       injPain, injArea, injImpact
     } = opts;
 
@@ -1231,6 +1309,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       sleepH, sleepScore, hrv, hrv7,
       rhr, rhrBase: hrRest,
       legs,
+      mood,
       injuryPain: injPain,
       injuryArea: injArea,
       injuryImpact: injImpact,
@@ -1240,6 +1319,7 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 
     const mins = durationMin;
     const head = [];
+    const goalUsed = goal || "ftp";
     if(sport==="bike_indoor") head.push("BICI INDOOR");
     if(sport==="bike_outdoor") head.push("BICI OUTDOOR");
     if(sport==="run") head.push("CORSA");
@@ -1267,6 +1347,18 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     if(isBikeSport && rd && rd.bikeBlock){
       // if an injury likely affects cycling, avoid intensity.
       if(["vo2","threshold","tempo"].includes(cat)) cat = "endurance";
+    }
+
+    // Goal-first logic: FTP first, VO2 secondary.
+    if(isBikeSport && goalUsed==="ftp"){
+      if(cat==="vo2") cat = "threshold";
+      else if(cat==="tempo" && rd && rd.level==="green" && !didQualityYesterday) cat = "threshold";
+    }else if(isBikeSport && goalUsed==="vo2"){
+      if(cat==="threshold" && rd && rd.level==="green" && !didQualityYesterday) cat = "vo2";
+    }
+
+    if(sport==="bike_outdoor" && meteo==="bad" && ["vo2","threshold"].includes(cat)){
+      cat = degradeCat(cat, 1);
     }
 
     const h = mins/60;
@@ -1308,6 +1400,8 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
     ifChosen = clamp(ifChosen, 0.45, 1.05);
     const targetTSS = Math.round(ifChosen*ifChosen*h*100);
 
+    const GOAL_LABEL = {ftp:"FTP", vo2:"VO2max", general:"Generale"};
+    head.push("Focus: " + (GOAL_LABEL[goalUsed] || "FTP"));
     head.push("Durata: " + mins + "′");
     head.push("TSS: " + targetTSS);
     head.push("IF: " + ifChosen.toFixed(2));
@@ -1438,6 +1532,63 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       bullet("Post: 25–35 g proteine + carbo (soprattutto se qualità).");
     }
 
+    function buildOutdoorMethod(){
+      if(!(sport==="bike_outdoor" && hasPower && ftp)) return null;
+      if(!["tempo","threshold","vo2"].includes(cat)) return null;
+
+      const approach = Math.max(wu, Math.round(approachMin || 10));
+      const usable = Math.max(3, Math.round(usableMin || (cat==="vo2" ? 6 : 8)));
+      const easyCap = round5(Math.min(140, ftp*0.72));
+      const z2Lo = round5(ftp*0.66);
+      const z2Hi = round5(ftp*0.76);
+      const backLo = round5(ftp*0.63);
+      const backHi = round5(ftp*0.73);
+      let work = 8, reps = 3, recTxt = "";
+      let target = wattRangeText(ftp*0.99, 5, 5);
+      let cap = round5(Math.min(ftp*1.04, ftp+8));
+      let name = "";
+
+      if(cat==="vo2"){
+        work = (usable >= 4) ? 3 : 2;
+        reps = (mins >= 65 ? 5 : 4);
+        target = wattRangeText(ftp*1.14, 4, 8);
+        cap = round5(ftp*1.20);
+        name = "VO2 outdoor " + reps + "×" + work + "′";
+        recTxt = logisticRecovery
+          ? ("Recupero libero/logistico — se pedalato facile, " + "cap " + easyCap + " W")
+          : ("Rec 3′ facile — cap " + easyCap + " W");
+      }else{
+        if(usable >= 14 && mins >= 60){ work = 15; reps = 2; }
+        else if(usable >= 9 && mins >= 55){ work = 10; reps = 3; }
+        else if(usable >= 7){ work = 8; reps = 3; }
+        else { work = 6; reps = 4; }
+
+        if(work >= 15) target = wattRangeText(ftp*0.99, 5, 5);
+        else if(work >= 10) target = wattRangeText(ftp*0.985, 5, 7);
+        else target = wattRangeText(ftp*0.98, 5, 8);
+
+        name = "Salita FTP " + reps + "×" + work + "′";
+        recTxt = logisticRecovery
+          ? ("Recupero libero/logistico — se pedalato facile, cap " + easyCap + " W")
+          : ("Rec " + (work >= 10 ? 5 : 4) + "–5′ facile — cap " + easyCap + " W");
+      }
+
+      bullet("Avvicinamento " + approach + "′ — " + wattsText(z2Lo, z2Hi));
+      for(let i=1;i<=reps;i++){
+        bullet("LAP · " + work + "′ — " + wattsText(target.lo, target.hi) + " (centro ~" + target.center + " W, cap " + cap + " W)");
+        if(i<reps) bullet(recTxt);
+      }
+      bullet("Rientro Z2 facile " + cd + "–15′ — " + wattsText(backLo, backHi));
+
+      plain("");
+      plain("MEMO");
+      bullet("Usa LAP: fallo partire solo quando inizia il tratto buono.");
+      bullet("Guarda Lap Avg Power: precisione sul blocco, non sul secondo.");
+      if(logisticRecovery) bullet("Recupero logistico ammesso: discesa/ritorno sotto salita valgono come recupero.");
+      bullet("Se traffico o stop durante un blocco, allunga per avere minuti buoni.");
+      return {name};
+    }
+
     // Blocks (indoor structured, outdoor steady)
     const advice = [];
     bullet("Riscaldamento " + wu + "′ — " + intStr(1));
@@ -1473,6 +1624,15 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
 if(cat==="recovery"){
   bullet("Facile " + main + "′ — " + intStr(1));
   bullet("Defaticamento " + cd + "′ — " + intStr(1));
+  appendNutrition();
+  appendAdvice();
+  return pack();
+}
+
+// Outdoor method-first logic (lap based, block precision > second precision)
+const outdoorPicked = buildOutdoorMethod();
+if(outdoorPicked){
+  if(outdoorPicked.name) variantName = outdoorPicked.name;
   appendNutrition();
   appendAdvice();
   return pack();
@@ -1551,6 +1711,12 @@ return pack();
       hrv7: n(els.hrv7.value),
       rhr: n(els.rhr.value),
       legs: n(els.legs.value),
+      mood: n(els.mood.value),
+      goal: (els.goal.value || "ftp").trim(),
+      meteo: (els.meteo.value || "ok").trim(),
+      approachMin: n(els.approachMin.value),
+      usableMin: n(els.usableMin.value),
+      logisticRecovery: state.logisticRecovery,
       injPain: n(els.injPain.value),
       injArea: (els.injArea.value || "").trim(),
       injImpact: (els.injImpact.value || "auto").trim()
@@ -1576,7 +1742,7 @@ return pack();
   
   function reset(){
     els.dur.value = "";
-    els.ftp.value = "";
+    els.ftp.value = "197";
     els.hrMaxBike.value = "";
     els.hrRestBike.value = "";
     els.hrMaxRun.value = "";
@@ -1589,6 +1755,11 @@ return pack();
     els.hrv7.value = "";
     els.rhr.value = "";
     els.legs.value = "";
+    els.mood.value = "";
+    els.meteo.value = "ok";
+    els.goal.value = "ftp";
+    els.approachMin.value = "10";
+    els.usableMin.value = "8";
     els.injPain.value = "";
     els.injArea.value = "";
     els.injImpact.value = "auto";
@@ -1600,10 +1771,13 @@ return pack();
 
     state.hasPower = false;
     state.didQualityYesterday = false;
+    state.logisticRecovery = false;
     els.powChk.checked = false;
     els.qualChk.checked = false;
+    if(els.logRecChk) els.logRecChk.checked = false;
     setSwitch(els.powSwitch, false);
     setSwitch(els.qualSwitch, false);
+    if(els.logRecSwitch) setSwitch(els.logRecSwitch, false);
 
     setSport("bike_indoor");
     updateVisibility();
@@ -1681,17 +1855,27 @@ return pack();
     save();
   }
 
+  function syncLogisticRecovery(){
+    state.logisticRecovery = !!els.logRecChk.checked;
+    if(els.logRecSwitch) setSwitch(els.logRecSwitch, state.logisticRecovery);
+    save();
+  }
+
   rowToggle(els.powWrap, els.powChk);
   rowToggle(els.qualWrap, els.qualChk);
+  if(els.logRecWrap) rowToggle(els.logRecWrap, els.logRecChk);
   els.powChk.addEventListener('change', syncPower);
   els.qualChk.addEventListener('change', syncQuality);
+  if(els.logRecChk) els.logRecChk.addEventListener('change', syncLogisticRecovery);
 
-  ["dur","ftp","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","sleepH","sleepScore","hrv","hrv7","rhr","legs","injPain","injArea","ctl","atl","tsb","ramp"].forEach(id=>{
+  ["dur","ftp","goal","approachMin","usableMin","hrMaxBike","hrRestBike","hrMaxRun","hrRestRun","sleepH","sleepScore","hrv","hrv7","rhr","legs","mood","injPain","injArea","ctl","atl","tsb","ramp"].forEach(id=>{
     $(id).addEventListener('input', save, {passive:true});
   });
 
   // select needs change event
   els.injImpact.addEventListener('change', save, {passive:true});
+  els.goal.addEventListener('change', save, {passive:true});
+  els.meteo.addEventListener('change', save, {passive:true});
 
   // show/hide injury extra fields
   els.injPain.addEventListener('input', updateInjuryUI, {passive:true});
@@ -1723,6 +1907,7 @@ return pack();
   setSport(state.sport);
   setSwitch(els.powSwitch, state.hasPower);
   setSwitch(els.qualSwitch, state.didQualityYesterday);
+  if(els.logRecSwitch) setSwitch(els.logRecSwitch, state.logisticRecovery);
   updateDurQuick();
   updateVisibility();
   updateInjuryUI();
@@ -1731,6 +1916,11 @@ return pack();
     const d0 = durationMinutes(state.sport, n(els.ctl.value), null);
     els.dur.value = d0;
   }
+  if(!els.ftp.value) els.ftp.value = "197";
+  if(!els.goal.value) els.goal.value = "ftp";
+  if(!els.meteo.value) els.meteo.value = "ok";
+  if(!els.approachMin.value) els.approachMin.value = "10";
+  if(!els.usableMin.value) els.usableMin.value = "8";
 
   // PWA SW
   if('serviceWorker' in navigator){

@@ -1,3 +1,9 @@
+v8.11.0
+- Metodo outdoor-aware: aggiunti Focus di oggi (FTP / VO2max / Generale), Umore / energia, Meteo, Avvicinamento, Tratto utile e toggle Recupero logistico.
+- Planner bici outdoor con logica LAP-first: genera workout semplici, memorizzabili e realistici (es. Salita FTP 3×8 / 3×10 / 2×15, VO2 outdoor 4–5×3′) invece di strutture rigide al secondo.
+- Output: aggiunta sezione MEMO con regole esecutive (“precisione sul blocco, non sul secondo”, LAP Avg Power, recupero logistico ammesso).
+- Default aggiornati al metodo corrente: FTP iniziale 197 W, durata outdoor rapida include 60′.
+
 v8.10.3
 - Output: spostate Note infortunio e Tip outdoor in fondo, sezione "CONSIGLI", per non confonderle con i blocchi allenamento.
 
