@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
-  <title>TSS Planner v8.11.3</title>
+  <title>TSS Planner v8.11.4</title>
   <style>
     :root{
       --bg:#0b0d10;
@@ -467,7 +467,7 @@
         <div class="logo" aria-hidden="true"><span>TSS</span></div>
         <div class="title">
           <h1>TSS Planner</h1>
-          <div class="sub">Planner only · v8.11.3</div>
+          <div class="sub">Planner only · v8.11.4</div>
         </div>
       </div>
       <div class="pill" id="todayPill"></div>
@@ -1551,57 +1551,93 @@ function applyVariant(cat, sport, mainMin, bullet, intStr, didQualityYesterday, 
       const z2Hi = round5(ftp*0.76);
       const backLo = round5(ftp*0.63);
       const backHi = round5(ftp*0.73);
-      let work = 8, reps = 3, recTxt = "";
+      const minTail = Math.min(20, Math.max(10, Math.round(mins*0.15)));
+      const availableForCore = Math.max(0, mins - approach - minTail);
       let target = wattRangeText(ftp*0.99, 5, 5);
       let cap = round5(Math.min(ftp*1.04, ftp+8));
       let name = "";
+      let work = 8, reps = 3, recMin = 4;
+      let recTxt = "";
+
+      function candidateFits(c){
+        return c.work <= usable && (c.reps*c.work + (c.reps-1)*c.rec) <= availableForCore;
+      }
+      function pickCandidate(cands){
+        const fits = cands.filter(candidateFits);
+        if(fits.length) return fits.sort((a,b)=>{
+          const qa = a.reps*a.work, qb = b.reps*b.work;
+          if(qb!==qa) return qb-qa;
+          if(a.reps!==b.reps) return a.reps-b.reps;
+          return b.work-a.work;
+        })[0];
+        const allowed = cands.filter(c=>c.work <= usable);
+        if(allowed.length){
+          return allowed.sort((a,b)=>{
+            const oa = Math.abs((a.reps*a.work + (a.reps-1)*a.rec) - availableForCore);
+            const ob = Math.abs((b.reps*b.work + (b.reps-1)*b.rec) - availableForCore);
+            if(oa!==ob) return oa-ob;
+            if(a.reps!==b.reps) return a.reps-b.reps;
+            return b.work-a.work;
+          })[0];
+        }
+        return {work: Math.max(3, usable), reps: 1, rec: 0};
+      }
 
       if(cat==="vo2"){
-        if(usable >= 4) work = 3;
-        else work = 2;
-        reps = (mins >= 65 ? 5 : 4);
+        const c = pickCandidate([
+          {work:4, reps:4, rec:4},
+          {work:3, reps:5, rec:3},
+          {work:3, reps:4, rec:3},
+          {work:2, reps:6, rec:2},
+          {work:2, reps:5, rec:2}
+        ]);
+        work = c.work; reps = c.reps; recMin = c.rec;
         target = wattRangeText(ftp*1.14, 4, 8);
         cap = round5(ftp*1.20);
         name = "VO2 outdoor " + reps + "×" + work + "′";
-        recTxt = logisticRecovery
-          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
-          : ("Rec 3′ facile — cap " + easyCap + " W");
       }else if(cat==="threshold"){
-        if(usable >= 15 && mins >= 60){ work = 15; reps = 2; }
-        else if(usable >= 10 && mins >= 55){ work = 10; reps = 3; }
-        else if(usable >= 8){ work = 8; reps = 3; }
-        else if(usable >= 6){ work = 6; reps = 4; }
-        else { work = Math.max(3, usable); reps = 4; }
-
+        const c = pickCandidate([
+          {work:15, reps:2, rec:5},
+          {work:12, reps:2, rec:5},
+          {work:10, reps:3, rec:5},
+          {work:8, reps:3, rec:4},
+          {work:6, reps:4, rec:4}
+        ]);
+        work = c.work; reps = c.reps; recMin = c.rec;
         if(work >= 15) target = wattRangeText(ftp*0.99, 5, 5);
         else if(work >= 10) target = wattRangeText(ftp*0.985, 5, 7);
         else if(work >= 8) target = wattRangeText(ftp*0.98, 5, 8);
         else target = wattRangeText(ftp*0.975, 5, 8);
-
         name = "Salita FTP " + reps + "×" + work + "′";
-        recTxt = logisticRecovery
-          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
-          : ("Rec " + (work >= 10 ? 5 : 4) + "–5′ facile — cap " + easyCap + " W");
       }else{
-        if(usable >= 10 && mins >= 55){ work = 10; reps = 3; }
-        else if(usable >= 8){ work = 8; reps = 3; }
-        else if(usable >= 6){ work = 6; reps = 4; }
-        else { work = Math.max(3, usable); reps = 4; }
-
+        const c = pickCandidate([
+          {work:12, reps:2, rec:4},
+          {work:10, reps:3, rec:4},
+          {work:8, reps:3, rec:4},
+          {work:6, reps:4, rec:3}
+        ]);
+        work = c.work; reps = c.reps; recMin = c.rec;
         target = wattRangeText(ftp*0.90, 5, 8);
         cap = round5(Math.min(ftp*0.95, ftp+2));
         name = "Salita Tempo " + reps + "×" + work + "′";
-        recTxt = logisticRecovery
-          ? ("Recupero libero/logistico — discesa o ritorno al punto di partenza; se pedalato facile, cap " + easyCap + " W")
-          : ("Rec 4′ facile — cap " + easyCap + " W");
       }
+
+      const recEstMin = logisticRecovery ? Math.max(recMin + 2, 5) : recMin;
+      const coreUsed = reps*work + Math.max(0, reps-1)*recEstMin;
+      const tailMin = Math.max(0, mins - approach - coreUsed);
+      recTxt = logisticRecovery
+        ? ("Recupero logistico ~" + recEstMin + "′ — discesa/ritorno; se pedalato facile, cap " + easyCap + " W")
+        : ("Rec " + recMin + (recMin===5 ? "′" : "–" + Math.max(recMin,5) + "′") + " facile — cap " + easyCap + " W");
 
       bullet("Avvicinamento " + approach + "′ — " + wattsText(z2Lo, z2Hi));
       for(let i=1;i<=reps;i++){
         bullet("LAP · " + work + "′ — " + wattsText(target.lo, target.hi) + " (centro ~" + target.center + " W, cap " + cap + " W)");
         if(i<reps) bullet(recTxt);
       }
-      bullet("Rientro Z2 facile " + cd + "–15′ — " + wattsText(backLo, backHi));
+      if(tailMin > 0){
+        const tailLabel = tailMin >= 20 ? "Z2 di completamento " : "Rientro Z2 facile ";
+        bullet(tailLabel + tailMin + "′ — " + wattsText(backLo, backHi));
+      }
       return {name};
     }
 

@@ -94,3 +94,5 @@ TSS Planner – v8.2 (planner only)
 - Layout mobile (iPhone) centrato e con safe-area (niente offset/bordo a sinistra).
 - Output “allenamento” unico, copiabile, senza spiegazioni nell’app.
 - PWA offline: cache di base via service worker.
+
+- v8.11.4: outdoor method now fits total duration; avvicinamento + blocchi + recuperi + Z2 finale sommano alla durata totale. Limite alle ripetute e scelta del formato blocchi in base a Tratto utile e Durata.
