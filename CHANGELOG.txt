@@ -1,3 +1,9 @@
+v8.11.5
+- Outdoor: la durata totale ora torna davvero. Avvicinamento + blocchi + recuperi + Z2 finale vengono bilanciati sui minuti inseriti.
+- Outdoor: la durata extra non aumenta in modo aggressivo le ripetute; viene usata per completamento/rientro in Z2.
+- Output: aggiunta una riga "Tempo stimato" con il dettaglio dei minuti.
+- Check-in: rimossi i campi Gambe e Umore / energia per semplificare la schermata.
+
 v8.11.3
 - Outdoor: il campo Avvicinamento (min) ora aggiorna davvero la seduta generata.
 - Outdoor: Avvicinamento sostituisce il vecchio riscaldamento separato, evitando doppioni.
@@ -96,3 +102,7 @@ TSS Planner – v8.2 (planner only)
 - PWA offline: cache di base via service worker.
 
 - v8.11.4: outdoor method now fits total duration; avvicinamento + blocchi + recuperi + Z2 finale sommano alla durata totale. Limite alle ripetute e scelta del formato blocchi in base a Tratto utile e Durata.
+
+- v8.12.0: aggiunto focus Sprint (suggerito solo con readiness verde, no qualità ieri, durata <=60′ e non più di una proposta ogni 14 giorni, basata sulla cronologia interna dell'app).
+- v8.12.0: planner outdoor con 2–3 scelte: A) allunga tutto in fondo, B) distribuisce la Z2 tra i blocchi, C) più equilibrata / meno qualità.
+- v8.12.0: il tempo totale outdoor torna in modo coerente nelle varianti; la durata extra non finisce più solo in fondo per forza.
